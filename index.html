@@ -1,536 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;700&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quadrant Site</title>
+  <style>
 
-        :root {
-            --main-bg-color: #f4f4f4;
-            --content-bg-color: #f4f4f4;
-            --text-color: #333;
-            --link-color: #0000ff;
-            --sidebar-bg-color: #f4f4f4;
-        }
+    /* --- Keep Font Import --- */
+    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
 
-        body {
-            font-family: 'Times New Roman', serif;
-            background-color: var(--main-bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            display: flex;
-            max-width: 100%;
-            margin: 0 auto;
-            flex-direction: column;
-        }
-
-        /*
-        .sidebar {
-            width: 200px;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            padding: 20px;
-            background-color: var(--sidebar-bg-color);
-            overflow-y: auto;
-            font-family: 'Inter', sans-serif;
-            z-index: 50;
-        }
-        */
-        .sidebar {
-            width: 100%;
-            position: static;
-            padding: 20px;
-            background-color: var(--sidebar-bg-color);
-            font-family: 'Inter', sans-serif;
-            z-index: 50;
-        }
-
-        .content {
-            flex-grow: 1;
-            margin-left: 0px;
-            background-color: var(--content-bg-color);
-            padding: 20px;
-            max-width: 100%;
-        }
-
-        h1, h2, h3 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            margin-top: 0em;
-            margin-bottom: 0em;
-        }
-
-        h1 {
-            font-size: 1.25em;
-            margin-bottom: 0em;
-        }
-
-        h2 {
-            font-size: 1.3em;
-        }
-
-        h3 {
-            font-size: 1.1em;
-        }
-
-        /* Adjust the first heading to have less top margin */
-        .content > h1:first-child,
-        .content > h2:first-child,
-        .content > h3:first-child {
-            margin-top: 0;
-        }
-
-        /* Reduce space between paragraphs and headings */
-        p + h1, p + h2, p + h3 {
-            margin-top: 0.2em;
-        }
-
-        .button {
-            background-color: var(--text-color);
-            color: var(--content-bg-color);
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            transition-duration: 0.4s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .button:hover {
-            background-color: var(--link-color);
-        }
-
-        .tracked ins {
-            background-color: #e6ffed;
-            text-decoration: none;
-        }
-
-        .tracked del {
-            background-color: #ffeef0;
-            text-decoration: line-through;
-        }
-
-        .clean ins {
-            text-decoration: none;
-        }
-
-        .clean del {
-            display: none;
-        }
-
-        sup {
-            cursor: pointer;
-            color: var(--link-color);
-        }
-
-        sup:hover {
-            text-decoration: underline;
-        }
-
-        #footnote-popup {
-            position: absolute;
-            background-color: var(--sidebar-bg-color);
-            border: 1px solid #ddd;
-            padding: 10px;
-            max-width: 300px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 1000;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8em;
-        }
-
-        .close-button {
-            float: right;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .footnotes {
-            display: none;
-        }
-
-        #back-to-top {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--text-color);
-            color: var(--content-bg-color);
-            border: none;
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            line-height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            display: none;
-            transition: opacity 0.3s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        #back-to-top:hover {
-            background-color: var(--link-color);
-        }
-
-        .toc-link {
-            display: block;
-            padding: 3px 0;
-            color: var(--text-color);
-            text-decoration: none;
-            font-size: 0.8em;
-        }
-
-        .toc-link:hover {
-            color: var(--link-color);
-        }
-
-        @media (min-width: 769px) {
-            .container {
-                flex-direction: row;
-            }
-
-            .sidebar {
-                width: 200px;
-                position: fixed;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                overflow-y: auto;
-            }
-
-            .content {
-                margin-left: 220px;
-                padding: 40px;
-                max-width: 800px;
-            }
-        }
-
-        p {
-            margin-top: 0;
-            margin-bottom: 0.4em;
-        }
-
-        /*p + p {
-            margin-top: 0.3em;
-        }*/
-
-        a {
-            color: var(--link-color);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .content {
-            font-size: 18px;
-        }
-
-        .sidebar h2 {
-            font-size: 1.5em;
-            margin-bottom: 0.9em;
-            z-index: 200;
-        }
-
-        .article-meta {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9em;
-            margin-bottom: 2em;
-            color: #666;
-        }
-
-        /*.gradient-element {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 10vh;
-            z-index: 100;
-            margin: 0;
-            pointer-events: none;
-        }*/
-
-        .gradient-element {
-        position: relative;
-        width: 100%;
-        height: 50vh;
-        margin: 2em 0 1em 0;
-        pointer-events: none;
-        z-index: 100;
-        animation: gradientWave 10s ease infinite;
-        background-size: 400% 400%;
+    /* Bibliography list styling */
+    .biblio-list {
+      padding-left: 1.2em;           /* indent list */
+      margin: 0.5em 0;
+      list-style-type: disc;         /* bullets */
+      /* list-style-type: "›"; */    /* or use a caret glyph */
     }
 
-    @keyframes gradientWave {
-        0% { background-position: 0% 50% }
-        50% { background-position: 100% 50% }
-        100% { background-position: 0% 50% }
+    .biblio-list li {
+      margin-bottom: 0.4em;
+      line-height: 1.4;
     }
-    </style>
+
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      /* remove overflow: scroll; let content dictate scrolling */
+      /* height: 100%; */ /* Optional: helps establish height context */
+      font-family: 'Josefin Sans', sans-serif;
+      background-color: #f8f8f8; /* Add a light background to body */
+    }
+
+    /* --- Remove SVG styles or adapt them --- */
+    /* If keeping SVGs, they likely need different positioning now */
+    /* .background-svg, .overlay-svg { ... } */
+
+    #canvas {
+      /* --- Remove fixed large dimensions --- */
+      /* width: 200vw; */
+      /* height: 200vh; */
+
+      /* --- Use CSS Grid for layout --- */
+      display: grid;
+      grid-template-columns: repeat(2, minmax(300px, 1fr));
+      grid-template-rows: repeat(2, auto);
+      gap: 20px;
+
+      /* --- Control overall canvas size and centering --- */
+      width: 95%;
+      max-width: 1600px;
+      min-height: 80vh;
+      margin: 20px auto;
+      padding: 10px;
+      box-sizing: border-box;
+
+      /* --- !! IMPORTANT: Needed for absolute positioning of children !! --- */
+      position: relative;
+    }
+
+    /* ... other styles ... */
+
+    .overlay-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      /* --- !! Adjust size to fit the relative parent (canvas) !! --- */
+      width: 100%;
+      height: 100%;
+      z-index: 10; /* Keep on top as it's an overlay */
+      pointer-events: none;
+      /* --- !! Add opacity to see through it !! --- */
+      opacity: 0.15; /* Adjust value (0.0 to 1.0) as needed */
+      object-fit: cover; /* Handle aspect ratio differences */
+    }
+    .invertible-svg {
+      filter: invert(1);
+      /* Background probably less relevant now opacity is used */
+      /* background: rgba(0, 0, 0, 0.5); */
+    }
+
+    .quadrant {
+      /* position: relative; */ /* Still needed for popup positioning */
+      position: relative;
+      /* --- Let Grid handle sizing, remove fixed sizes --- */
+      /* width/height are now controlled by grid-template-columns/rows */
+
+      /* --- Styling and Content Flow --- */
+      padding: 15px 20px; /* Padding inside quadrants */
+      box-sizing: border-box;
+      border: 1px solid #ddd; /* Visually separate quadrants */
+      background-color: #fff; /* Give quadrants a background */
+      border-radius: 5px;
+      /* --- Control Overflow --- */
+      /* overflow-y: auto; */ /* REMOVE this - we want the quadrant ITSELF to grow */
+      overflow: visible; /* Default, allows content to expand the container */
+
+      /* Add a minimum height so they don't collapse entirely */
+      min-height: 100px;
+
+      /* Smooth transition for size changes (optional, might be subtle) */
+      /* transition: height 0.4s ease; */ /* This might fight with max-height transition */
+    }
+
+    /* --- Keep Section Content Expansion Styles --- */
+    .section-content {
+      max-height: 0;
+      /*overflow: visible !important;*/
+      overflow: hidden;
+      transition: max-height 0.4s ease-out; /* Keep transition */
+      /* Add some padding/margin when expanded for spacing */
+      padding-top: 0; /* Start padding at 0 */
+      margin-top: 0;
+      transition: max-height 0.4s ease-out, padding-top 0.4s ease-out, margin-top 0.4s ease-out; /* Transition padding too */
+    }
+
+
+
+    .section-content.expanded {
+      /* Use a large enough value, or consider alternatives if content can be HUGE */
+      max-height: 10000px; /* Increased max-height */
+      /* Add space only when expanded */
+      padding-top: 10px;
+      margin-top: 5px; /* Small margin between header and expanded content */
+    }
+
+    
+    .background-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200vw;
+      height: 200vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .popup {
+      position: relative;
+      cursor: pointer;
+      text-decoration: underline dotted;
+    }
+
+    .popup .popup-box {
+      display: none;
+      position: fixed;
+      margin-bottom: 8px;
+
+      /* styling */
+      background: #ffffe0;
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      font-size: 0.95em;
+      line-height: 1.4;
+      z-index: 10;
+
+      /* allow wrapping and arbitrary width */
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 90ch;   /* ~90 characters–adjust as you like */
+      /*max-height: none;
+      overflow: visible;*/
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border-radius: 4px;
+    }
+
+    .popup:hover .popup-box,
+    .popup.show .popup-box {
+      display: block;
+    }
+
+    /*.popup sup {
+      font-size: 1em;
+      vertical-align: super;
+    }*/
+
+    .popup::after {
+      /* show above the reference marker */
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 8px;
+
+      /* allow full HTML inside, not just plain-text */
+      content: "";
+      display: none;
+      position: absolute;
+      z-index: 1000;
+
+      /* we’ll inject HTML via JS instead of content:attr() */
+    }
+
+
+    /*.popup:hover::after,
+    .popup.show::after {
+      display: block;
+    }*/
+    .text {
+      font-size: 11pt; /* Adjusted base font size */
+      line-height: 1.4; /* Adjusted line height */
+    }
+
+    .text p {
+      margin-bottom: 1em; /* Standard spacing, adjust as needed */
+      /* You could also use pixels (e.g., 16px) or other units */
+    }
+
+    .text h1, .text h2 {
+      cursor: pointer;
+      margin-top: 0; /* Remove default top margin */
+      margin-bottom: 8px; /* Space below header */
+      padding-bottom: 5px;
+      /* border-bottom: 1px solid #eee; */ /* Optional separator */
+      font-weight: normal; /* Using Josefin Sans, normal might look better */
+      color: #333;
+    }
+    .text h1 { font-size: 1.8em; color: #111;}
+    .text h2 { font-size: 1.4em; color: #222;}
+
+    
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <h2>Epistle to the Successors</h2>
-            <div id="toc"></div>
-            <button id="toggle-view" class="button">Show Clean Version</button>
-        </div>
-        <div class="content">
-            <!-- <h1>TL;DR</h1> -->
-            <div id="content" class="clean">
-                <!-- Content will be loaded here dynamically -->
-            </div>
-        </div>
+  <div id="canvas">
+    <img src="shoggoth.svg" alt="Background" class="overlay-svg invertible-svg" />
+    <div class="quadrant" id="q1">
+      <div class="text" id="content1">Loading...</div>
     </div>
-
-    <div id="footnote-popup">
-        <span class="close-button">&times;</span>
-        <span id="footnote-content"></span>
+    <div class="quadrant" id="q2">
+      <div class="text" id="content2">Loading...</div>
     </div>
+    <div class="quadrant" id="q3">
+      <div class="text" id="content3">Loading...</div>
+    </div>
+    <div class="quadrant" id="q4">
+      <div class="text" id="content4">Loading...</div>
+    </div>
+  </div>
+  <script>
 
-    <div class="footnotes"></div>
+    async function loadMarkdownSections() {
+          try { // Optional: Add try/catch for better error handling
+              const resp = await fetch('epistle_faz.md');
+              if (!resp.ok) {
+                  console.error("Failed to load markdown:", resp.statusText);
+                  // Display error message in quadrants
+                  document.getElementById('content1').innerHTML = 'Error loading content.';
+                  document.getElementById('content2').innerHTML = 'Error loading content.';
+                  document.getElementById('content3').innerHTML = 'Error loading content.';
+                  document.getElementById('content4').innerHTML = 'Error loading content.';
+                  return;
+              }
+              const text = await resp.text();
+              const noStrike = text.replace(/~~.*?~~/gs, ''); // Example: Keep this
 
-    <button id="back-to-top" title="Back to Top">↑</button>
+              // --- !! Restore FULL footnote parsing !! ---
+              const footnotePairs = {};
+              const footnotes = [...text.matchAll(/\[\^(\d+)\]:\s*((?:[^\n]+(?:\n(?!\[\^\d+\]:).*)*)+)/g)];
+              footnotes.forEach(match => {
+                  footnotePairs[match[1]] = match[2].trim();
+              });
+              // --- !! END Restore ---
 
-    <script>
-        function convertMarkdownToHtml(markdown) {
-            console.log('Starting markdown conversion');
-            
-            // Split content into main text and footnotes
-            let parts = markdown.split(/\n\[\^/);
-            let mainContent = parts[0];
-            let footnotesContent = parts.slice(1).join('\n[^');
-            
-            console.log('Main content length:', mainContent.length);
-            console.log('Footnotes content length:', footnotesContent.length);
+              // --- !! Restore FULL bibliography parsing !! ---
+              const biblioMatch = text.match(/##\s*(?:sources|bibliography)[\s\S]*/i);
+              let biblio = biblioMatch ? biblioMatch[0].trim() : '';
+              const biblioRefs = {};
+              biblio.split(/\n(?=[A-Z][a-z]+ \d{4})/).forEach(entry => {
+                  const label = entry.match(/^([A-Z][a-z]+ \d{4})/);
+                  if (label) biblioRefs[label[1]] = entry.trim();
+              });
+              // --- !! END Restore ---
 
-            // Convert main content
-            let html = mainContent
-                // Convert headers
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                // Convert footnotes (do this early to avoid conflicts with other markup)
-                .replace(/\[\^(\d+)\]/g, '<sup data-footnote="$1">$1</sup>')
-                // Convert strikethrough (do this before other inline styles)
-                .replace(/~~([\s\S]+?)~~/g, '<del>$1</del>')
-                // Convert emphasis (italic)
-                .replace(/\*([^\*\n]+)\*/g, '<ins>$1</ins>')
-                // Convert strong emphasis (bold)
-                .replace(/\*\*([^\*\n]+)\*\*/g, '<strong>$1</strong>')
-                // Convert links
-                .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>')
-                // Convert paragraphs
-                .replace(/^\s*$/gm, '</p><p>')
-                .replace(/^(.+)$/gm, '$1<br>');
+              // --- !! Restore FULL bodyOnly creation and cleanup !! ---
+              let bodyOnly = noStrike
+                .replace(/\[\^\d+\]:.*(?:\n(?!\[\^\d+\]:).*)*/g, '')  // remove footnotes definitions
+                .replace(/##\s*(?:sources|bibliography)[\s\S]*/i, '');
 
-            // Wrap main content with paragraph tags
-            html = '<p>' + html + '</p>';
-            
-            // Remove extra paragraph tags
-            html = html.replace(/<p><\/p>/g, '');
+              // Replace references with popups (ensure this uses the populated footnotePairs and biblioRefs)
+              bodyOnly = bodyOnly.replace(/\[\^(\d+)\]/g, (match, number) => {
+                const note = footnotePairs[number];
+                return note ? `<span class="popup" data-note="${note.replace(/"/g, '&quot;')}"><sup>[${number}]</sup></span>` : match;
+              });
+              bodyOnly = bodyOnly.replace(/\b([A-Z][a-z]+ \d{4})\b/g, (match) => {
+                const note = biblioRefs[match];
+                return note ? `<span class="popup" data-note="${note.replace(/"/g, '&quot;')}">${match}</span>` : match;
+              });
+              // --- !! END Restore ---
 
-            // Convert footnotes
-            if (footnotesContent) {
-                console.log('Processing footnotes');
-                let footnotes = footnotesContent.split(/\n\[\^/);
-                footnotes.forEach((footnote, index) => {
-                    console.log(`Processing footnote ${index + 1}:`, footnote);
-                    let match = footnote.match(/^(\d+)\]:\s*([\s\S]+)$/);
-                    if (match) {
-                        let [, id, content] = match;
-                        html += `<div class="footnote" id="footnote-${id}"><sup>${id}</sup> ${content.trim()}</div>`;
-                        console.log(`Added footnote ${id}`);
-                    } else {
-                        console.log('Failed to match footnote pattern:', footnote);
-                    }
-                });
-            } else {
-                console.log('No footnotes found');
-            }
+              // --- !! ADD THIS LINE HERE !! ---
+              // Remove all asterisks after other processing
+              bodyOnly = bodyOnly.replace(/\*/g, "");
+              // --- !! END ADDITION !! ---
 
-            console.log('Markdown conversion complete');
-            return html;
-        }
-        
-        function generateTableOfContents() {
-            const headings = document.querySelectorAll('h2, h3');
-            const toc = document.getElementById('toc');
-            headings.forEach((heading, index) => {
-                if (index > 0) {
-                    const link = document.createElement('a');
-                    link.textContent = heading.textContent;
-                    link.href = `#heading-${index}`;
-                    link.classList.add('toc-link');
-                    link.style.paddingLeft = `${(heading.tagName === 'H3' ? 20 : 0)}px`;
-                    toc.appendChild(link);
+              // Do the pop-up anchors
+              bodyOnly = bodyOnly.replace(
+                /<span class="popup"([^>]*)>([\s\S]*?)<\/span>/g,
+                (_, attrs, inner) => {
+                  // sanitize your note text as before…
+                  const note = attrs
+                    .match(/data-note="([^"]*)"/)[1]
+                    .replace(/\r?\n+/g, ' ')
+                    .trim();
 
-                    heading.id = `heading-${index}`;
+                  // inject a <span> not a <div>
+                  return `<span class="popup"${attrs}>`
+                      +  `${inner}`
+                      +  `<span class="popup-box">${note}</span>`
+                      +  `</span>`;
                 }
-            });
-        }
+              );
 
-        function handleScroll() {
-            const backToTop = document.getElementById('back-to-top');
-            if (window.pageYOffset > 300) {
-                backToTop.style.display = 'block';
-            } else {
-                backToTop.style.display = 'none';
-            }
-        }
 
-        function createRippleGradient(hue1, hue2) {
-            return `linear-gradient(45deg, 
-                hsl(${hue1}, 70%, 80%) 0%,
-                hsl(${(hue1 + hue2) / 2}, 70%, 80%) 50%,
-                hsl(${hue2}, 70%, 80%) 100%
-            )`;
-        }
 
-        function animateGradient(element, hue1, hue2) {
-            let phase = 0;
-            setInterval(() => {
-                phase = (phase + 1) % 360;
-                const newHue1 = (hue1 + phase) % 360;
-                const newHue2 = (hue2 + phase) % 360;
-                element.style.background = createRippleGradient(newHue1, newHue2);
-            }, 100); // Update every 100ms
-        }
 
-        function insertGradientElements() {
-            const sections = document.querySelectorAll('.content h2');
-            let hueStart = Math.random() * 360;
 
-            sections.forEach((section, index) => {
-                if (index == 7 || index == 11 || index == 15) {
-                    const gradientElement = document.createElement('div');
-                    gradientElement.className = 'gradient-element';
-
-                    // Create a unique gradient for each element
-                    const incr = Math.min(Math.random() * 60, 15);
-                    const hue1 = (hueStart + index * incr) % 360;
-                    const hue2 = (hue1 + incr*5) % 360;
-
-                    gradientElement.style.background = createRippleGradient(hue1, hue2);
-
-                    // Insert the gradient element after the section
-                    section.parentNode.insertBefore(gradientElement, section);
-                    
-                    animateGradient(gradientElement, hue1, hue2);
-
+              // --- Group content into sections ---
+              // This part should now work correctly as bodyOnly is populated
+              const lines = bodyOnly.split('\n');
+              const sections = [];
+              let current = null;
+              lines.forEach(line => {
+                const h1 = line.match(/^# (.*)/);
+                const h2 = line.match(/^## (.*)/);
+                if (h1 || h2) {
+                  if (current) sections.push(current);
+                  current = {
+                    title: h1 ? h1[1].trim() : h2[1].trim(),
+                    level: h1 ? 'h1' : 'h2',
+                    body: []
+                  };
+                } else if (current && line.trim()) { // Only add non-empty lines to body
+                  current.body.push(line); // Keep original spacing info for <br> conversion
                 }
-            });
-    }
+              });
+              if (current) sections.push(current);
 
-        
+              // --- insert bibliography section after "SteelSofont, our case" ---
+              if (biblio) {
+                const rawBiblio = biblioMatch ? biblioMatch[0].trim() : '';
 
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const toggleButton = document.getElementById('toggle-view');
-            const content = document.getElementById('content');
-            const footnotePopup = document.getElementById('footnote-popup');
-            const footnoteContent = document.getElementById('footnote-content');
-            const closeButton = document.querySelector('.close-button');
-            const footnotes = document.querySelector('.footnotes');
-            const backToTop = document.getElementById('back-to-top');
+                const biblioLines = rawBiblio
+                  .replace(/^##\s*(?:sources|bibliography)\s*/i, '')
+                  .split('\n')
+                  .filter(l => l.trim())
+                  .map(entry =>
+                    entry
+                      // 1) convert Markdown links
+                      .replace(
+                        /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+                        '<a href="$2" target="_blank" rel="noopener">$1</a>'
+                      )
+                      // 2) convert any remaining bare URLs
+                      .replace(
+                        /(https?:\/\/[^\s<]+)/g,
+                        '<a href="$1" target="_blank" rel="noopener">$1</a>'
+                      )
+                  );
 
-            console.log('DOM fully loaded and parsed');
+                const biblioSection = {
+                  title: 'sources',
+                  level: 'h2',
+                  body: biblioLines
+                };
+                const idx = sections.findIndex(s =>
+                  /steels? ofont/i.test(s.title)
+                );
+                if (idx >= 0) sections.splice(idx + 1, 0, biblioSection);
+                else sections.push(biblioSection);
+              }
+              // --- end injection ---
 
-            // Load and convert markdown content
-            fetch('epistle_content.md')
-                .then(response => response.text())
-                .then(markdown => {
-                    console.log('Markdown loaded, converting to HTML');
-                    content.innerHTML = convertMarkdownToHtml(markdown);
-                    console.log('HTML conversion complete, setting up footnotes');
-                    setupFootnotes();
-                    generateTableOfContents();
-                    insertGradientElements(); // Add this line
-                })
-                .catch(error => console.error('Error loading markdown:', error));
 
-                // Set initial button text
-            toggleButton.textContent = 'Show Tracked Version';
-            
-            toggleButton.addEventListener('click', () => {
-                if (content.classList.contains('clean')) {
-                    content.classList.remove('clean');
-                    content.classList.add('tracked');
-                    toggleButton.textContent = 'Show Clean Version';
+              // --- Build HTML sections ---
+              // This part should work correctly now
+              /*const htmlSections = sections.map(({ title, level, body }) => {
+                const bodyHtml = body
+                    .join('\n') // Join lines preserving single newlines
+                    .split(/\n{2,}/) // Split into paragraphs on double+ newlines
+                    .map(p => p.trim())
+                    .filter(p => p) // Remove empty paragraphs
+                    // Replace single newlines within paragraphs with <br> before wrapping in <p>
+                    .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+                    .join('');
+                return `<${level}>${title}</${level}><div class="section-content">${bodyHtml}</div>`;
+              });*/
+
+              const htmlSections = sections.map(({ title, level, body }) => {
+                let bodyHtml;
+                if (/^sources$|^bibliography$/i.test(title)) {
+                  bodyHtml = `<ul class="biblio-list">` +
+                    body.map(entry => `<li>${entry}</li>`).join('') +
+                    `</ul>`;
                 } else {
-                    content.classList.remove('tracked');
-                    content.classList.add('clean');
-                    toggleButton.textContent = 'Show Tracked Version';
+                  bodyHtml = body
+                    .join('\n')
+                    .split(/\n{2,}/)
+                    .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+                    .join('');
                 }
+                return `<${level}>${title}</${level}><div class="section-content">${bodyHtml}</div>`;
+              });
+
+
+
+
+              // --- Distribute into quadrants ---
+              // This part should work correctly now
+              const quarter = Math.ceil(htmlSections.length / 4);
+              document.getElementById('content1').innerHTML = htmlSections.slice(0, quarter).join('');
+              document.getElementById('content2').innerHTML = htmlSections.slice(quarter, 2 * quarter).join('');
+              document.getElementById('content3').innerHTML = htmlSections.slice(2 * quarter, 3 * quarter).join('');
+              document.getElementById('content4').innerHTML = htmlSections.slice(3 * quarter).join('');
+
+              // --- Add toggle behavior ---
+              // This part remains the same
+              document.querySelectorAll('#canvas h1, #canvas h2').forEach(header => {
+                header.addEventListener('click', () => {
+                  const section = header.nextElementSibling;
+                  if (section && section.classList.contains('section-content')) {
+                    const wasExpanded = section.classList.contains('expanded');
+                    section.classList.toggle('expanded');
+                    // Scroll header into view if it was just expanded
+                    if (!wasExpanded) {
+                      // Use timeout to allow layout to recalculate AFTER max-height transition starts
+                      setTimeout(() => {
+                            header.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                      }, 50); // Adjust delay if needed
+                    }
+                  }
+                });
+              });
+          } catch (error) {
+              console.error("Error loading or processing markdown:", error);
+              // Display error message in quadrants
+                document.getElementById('content1').innerHTML = 'Error processing content.';
+                document.getElementById('content2').innerHTML = 'Error processing content.';
+                document.getElementById('content3').innerHTML = 'Error processing content.';
+                document.getElementById('content4').innerHTML = 'Error processing content.';
+          }
+        } // end loadMarkdownSections
+
+        function positionPopupBox(popup) {
+          const box = popup.querySelector('.popup-box');
+          if (!box) return;
+
+          const margin = 8;  
+          const rect = popup.getBoundingClientRect();
+          const boxW = box.offsetWidth;
+          const boxH = box.offsetHeight;
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+
+          // try to place above
+          let top = rect.top - boxH - margin;
+          if (top < margin) {
+            // not enough room above → drop below
+            top = rect.bottom + margin;
+          }
+
+          // align left, but shift left if it overflows right edge
+          let left = rect.left;
+          if (left + boxW + margin > vw) {
+            left = vw - boxW - margin;
+          }
+
+          box.style.top  = `${top}px`;
+          box.style.left = `${left}px`;
+        }
+
+        // toggle & position on click
+        document.addEventListener('click', e => {
+          const p = e.target.closest('.popup');
+          if (p) {
+            e.preventDefault();
+            // close others
+            document.querySelectorAll('.popup.show').forEach(o => {
+              if (o !== p) o.classList.remove('show');
             });
-        
-            function setupFootnotes() {
-                console.log('Setting up footnotes');
-                document.querySelectorAll('sup[data-footnote]').forEach(sup => {
-                    console.log('Adding click event to sup:', sup);
-                    sup.addEventListener('click', (e) => {
-                        console.log('Sup clicked:', e.target);
-                        const footnoteId = e.target.getAttribute('data-footnote');
-                        console.log('Footnote ID:', footnoteId);
-                        const footnote = document.getElementById(`footnote-${footnoteId}`);
-                        console.log('Footnote element:', footnote);
-                        if (footnote) {
-                            footnoteContent.innerHTML = footnote.innerHTML;
-                            footnotePopup.style.display = 'block';
-                            
-                            // Position the popup near the clicked footnote
-                            const rect = e.target.getBoundingClientRect();
-                            footnotePopup.style.top = `${window.scrollY + rect.bottom + 5}px`;
-                            footnotePopup.style.left = `${rect.left}px`;
-                            console.log('Footnote popup displayed');
-                        } else {
-                            console.log('Footnote not found');
-                        }
-                    });
-                });
-        
-                // Move footnote definitions to the hidden footnotes div
-                document.querySelectorAll('.footnote').forEach(footnote => {
-                    footnotes.appendChild(footnote);
-                });
-                console.log('Footnotes setup complete');
+            // toggle this one
+            p.classList.toggle('show');
+            if (p.classList.contains('show')) {
+              positionPopupBox(p);
             }
-        
-            closeButton.addEventListener('click', () => {
-                footnotePopup.style.display = 'none';
-            });
+          } else {
+            // click outside → close all
+            document.querySelectorAll('.popup.show').forEach(o => o.classList.remove('show'));
+          }
+        });
 
-            // Close popup when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!footnotePopup.contains(e.target) && !e.target.matches('sup[data-footnote]')) {
-                    footnotePopup.style.display = 'none';
-                }
-            });
+        // reposition if the user scrolls or resizes
+        window.addEventListener('scroll',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
+        window.addEventListener('resize',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
 
-            // Back to top functionality
-            backToTop.addEventListener('click', () => {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            });
 
-            window.addEventListener('scroll', () => {
-                handleScroll();
-            });
+        window.addEventListener('load', loadMarkdownSections);
 
-        });            
-    </script>
+  </script>
 </body>
 </html>

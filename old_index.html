@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;700&display=swap');
+
+        :root {
+            --main-bg-color: #f4f4f4;
+            --content-bg-color: #f4f4f4;
+            --text-color: #333;
+            --link-color: #0000ff;
+            --sidebar-bg-color: #f4f4f4;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background-color: var(--main-bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            max-width: 100%;
+            margin: 0 auto;
+            flex-direction: column;
+        }
+
+        /*
+        .sidebar {
+            width: 200px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 20px;
+            background-color: var(--sidebar-bg-color);
+            overflow-y: auto;
+            font-family: 'Inter', sans-serif;
+            z-index: 50;
+        }
+        */
+        .sidebar {
+            width: 100%;
+            position: static;
+            padding: 20px;
+            background-color: var(--sidebar-bg-color);
+            font-family: 'Inter', sans-serif;
+            z-index: 50;
+        }
+
+        .content {
+            flex-grow: 1;
+            margin-left: 0px;
+            background-color: var(--content-bg-color);
+            padding: 20px;
+            max-width: 100%;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            margin-top: 0em;
+            margin-bottom: 0em;
+        }
+
+        h1 {
+            font-size: 1.25em;
+            margin-bottom: 0em;
+        }
+
+        h2 {
+            font-size: 1.3em;
+        }
+
+        h3 {
+            font-size: 1.1em;
+        }
+
+        /* Adjust the first heading to have less top margin */
+        .content > h1:first-child,
+        .content > h2:first-child,
+        .content > h3:first-child {
+            margin-top: 0;
+        }
+
+        /* Reduce space between paragraphs and headings */
+        p + h1, p + h2, p + h3 {
+            margin-top: 0.2em;
+        }
+
+        .button {
+            background-color: var(--text-color);
+            color: var(--content-bg-color);
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition-duration: 0.4s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .button:hover {
+            background-color: var(--link-color);
+        }
+
+        .tracked ins {
+            background-color: #e6ffed;
+            text-decoration: none;
+        }
+
+        .tracked del {
+            background-color: #ffeef0;
+            text-decoration: line-through;
+        }
+
+        .clean ins {
+            text-decoration: none;
+        }
+
+        .clean del {
+            display: none;
+        }
+
+        sup {
+            cursor: pointer;
+            color: var(--link-color);
+        }
+
+        sup:hover {
+            text-decoration: underline;
+        }
+
+        #footnote-popup {
+            position: absolute;
+            background-color: var(--sidebar-bg-color);
+            border: 1px solid #ddd;
+            padding: 10px;
+            max-width: 300px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8em;
+        }
+
+        .close-button {
+            float: right;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .footnotes {
+            display: none;
+        }
+
+        #back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--text-color);
+            color: var(--content-bg-color);
+            border: none;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            transition: opacity 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #back-to-top:hover {
+            background-color: var(--link-color);
+        }
+
+        .toc-link {
+            display: block;
+            padding: 3px 0;
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.8em;
+        }
+
+        .toc-link:hover {
+            color: var(--link-color);
+        }
+
+        @media (min-width: 769px) {
+            .container {
+                flex-direction: row;
+            }
+
+            .sidebar {
+                width: 200px;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                overflow-y: auto;
+            }
+
+            .content {
+                margin-left: 220px;
+                padding: 40px;
+                max-width: 800px;
+            }
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 0.4em;
+        }
+
+        /*p + p {
+            margin-top: 0.3em;
+        }*/
+
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .content {
+            font-size: 18px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.5em;
+            margin-bottom: 0.9em;
+            z-index: 200;
+        }
+
+        .article-meta {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            margin-bottom: 2em;
+            color: #666;
+        }
+
+        /*.gradient-element {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 10vh;
+            z-index: 100;
+            margin: 0;
+            pointer-events: none;
+        }*/
+
+        .gradient-element {
+        position: relative;
+        width: 100%;
+        height: 50vh;
+        margin: 2em 0 1em 0;
+        pointer-events: none;
+        z-index: 100;
+        animation: gradientWave 10s ease infinite;
+        background-size: 400% 400%;
+    }
+
+    @keyframes gradientWave {
+        0% { background-position: 0% 50% }
+        50% { background-position: 100% 50% }
+        100% { background-position: 0% 50% }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Epistle to the Successors</h2>
+            <div id="toc"></div>
+            <button id="toggle-view" class="button">Show Clean Version</button>
+        </div>
+        <div class="content">
+            <!-- <h1>TL;DR</h1> -->
+            <div id="content" class="clean">
+                <!-- Content will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <div id="footnote-popup">
+        <span class="close-button">&times;</span>
+        <span id="footnote-content"></span>
+    </div>
+
+    <div class="footnotes"></div>
+
+    <button id="back-to-top" title="Back to Top">↑</button>
+
+    <script>
+        function convertMarkdownToHtml(markdown) {
+            console.log('Starting markdown conversion');
+            
+            // Split content into main text and footnotes
+            let parts = markdown.split(/\n\[\^/);
+            let mainContent = parts[0];
+            let footnotesContent = parts.slice(1).join('\n[^');
+            
+            console.log('Main content length:', mainContent.length);
+            console.log('Footnotes content length:', footnotesContent.length);
+
+            // Convert main content
+            let html = mainContent
+                // Convert headers
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                // Convert footnotes (do this early to avoid conflicts with other markup)
+                .replace(/\[\^(\d+)\]/g, '<sup data-footnote="$1">$1</sup>')
+                // Convert strikethrough (do this before other inline styles)
+                .replace(/~~([\s\S]+?)~~/g, '<del>$1</del>')
+                // Convert emphasis (italic)
+                .replace(/\*([^\*\n]+)\*/g, '<ins>$1</ins>')
+                // Convert strong emphasis (bold)
+                .replace(/\*\*([^\*\n]+)\*\*/g, '<strong>$1</strong>')
+                // Convert links
+                .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>')
+                // Convert paragraphs
+                .replace(/^\s*$/gm, '</p><p>')
+                .replace(/^(.+)$/gm, '$1<br>');
+
+            // Wrap main content with paragraph tags
+            html = '<p>' + html + '</p>';
+            
+            // Remove extra paragraph tags
+            html = html.replace(/<p><\/p>/g, '');
+
+            // Convert footnotes
+            if (footnotesContent) {
+                console.log('Processing footnotes');
+                let footnotes = footnotesContent.split(/\n\[\^/);
+                footnotes.forEach((footnote, index) => {
+                    console.log(`Processing footnote ${index + 1}:`, footnote);
+                    let match = footnote.match(/^(\d+)\]:\s*([\s\S]+)$/);
+                    if (match) {
+                        let [, id, content] = match;
+                        html += `<div class="footnote" id="footnote-${id}"><sup>${id}</sup> ${content.trim()}</div>`;
+                        console.log(`Added footnote ${id}`);
+                    } else {
+                        console.log('Failed to match footnote pattern:', footnote);
+                    }
+                });
+            } else {
+                console.log('No footnotes found');
+            }
+
+            console.log('Markdown conversion complete');
+            return html;
+        }
+        
+        function generateTableOfContents() {
+            const headings = document.querySelectorAll('h2, h3');
+            const toc = document.getElementById('toc');
+            headings.forEach((heading, index) => {
+                if (index > 0) {
+                    const link = document.createElement('a');
+                    link.textContent = heading.textContent;
+                    link.href = `#heading-${index}`;
+                    link.classList.add('toc-link');
+                    link.style.paddingLeft = `${(heading.tagName === 'H3' ? 20 : 0)}px`;
+                    toc.appendChild(link);
+
+                    heading.id = `heading-${index}`;
+                }
+            });
+        }
+
+        function handleScroll() {
+            const backToTop = document.getElementById('back-to-top');
+            if (window.pageYOffset > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        }
+
+        function createRippleGradient(hue1, hue2) {
+            return `linear-gradient(45deg, 
+                hsl(${hue1}, 70%, 80%) 0%,
+                hsl(${(hue1 + hue2) / 2}, 70%, 80%) 50%,
+                hsl(${hue2}, 70%, 80%) 100%
+            )`;
+        }
+
+        function animateGradient(element, hue1, hue2) {
+            let phase = 0;
+            setInterval(() => {
+                phase = (phase + 1) % 360;
+                const newHue1 = (hue1 + phase) % 360;
+                const newHue2 = (hue2 + phase) % 360;
+                element.style.background = createRippleGradient(newHue1, newHue2);
+            }, 100); // Update every 100ms
+        }
+
+        function insertGradientElements() {
+            const sections = document.querySelectorAll('.content h2');
+            let hueStart = Math.random() * 360;
+
+            sections.forEach((section, index) => {
+                if (index == 7 || index == 11 || index == 15) {
+                    const gradientElement = document.createElement('div');
+                    gradientElement.className = 'gradient-element';
+
+                    // Create a unique gradient for each element
+                    const incr = Math.min(Math.random() * 60, 15);
+                    const hue1 = (hueStart + index * incr) % 360;
+                    const hue2 = (hue1 + incr*5) % 360;
+
+                    gradientElement.style.background = createRippleGradient(hue1, hue2);
+
+                    // Insert the gradient element after the section
+                    section.parentNode.insertBefore(gradientElement, section);
+                    
+                    animateGradient(gradientElement, hue1, hue2);
+
+                }
+            });
+    }
+
+        
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const toggleButton = document.getElementById('toggle-view');
+            const content = document.getElementById('content');
+            const footnotePopup = document.getElementById('footnote-popup');
+            const footnoteContent = document.getElementById('footnote-content');
+            const closeButton = document.querySelector('.close-button');
+            const footnotes = document.querySelector('.footnotes');
+            const backToTop = document.getElementById('back-to-top');
+
+            console.log('DOM fully loaded and parsed');
+
+            // Load and convert markdown content
+            fetch('epistle_content.md')
+                .then(response => response.text())
+                .then(markdown => {
+                    console.log('Markdown loaded, converting to HTML');
+                    content.innerHTML = convertMarkdownToHtml(markdown);
+                    console.log('HTML conversion complete, setting up footnotes');
+                    setupFootnotes();
+                    generateTableOfContents();
+                    insertGradientElements(); // Add this line
+                })
+                .catch(error => console.error('Error loading markdown:', error));
+
+                // Set initial button text
+            toggleButton.textContent = 'Show Tracked Version';
+            
+            toggleButton.addEventListener('click', () => {
+                if (content.classList.contains('clean')) {
+                    content.classList.remove('clean');
+                    content.classList.add('tracked');
+                    toggleButton.textContent = 'Show Clean Version';
+                } else {
+                    content.classList.remove('tracked');
+                    content.classList.add('clean');
+                    toggleButton.textContent = 'Show Tracked Version';
+                }
+            });
+        
+            function setupFootnotes() {
+                console.log('Setting up footnotes');
+                document.querySelectorAll('sup[data-footnote]').forEach(sup => {
+                    console.log('Adding click event to sup:', sup);
+                    sup.addEventListener('click', (e) => {
+                        console.log('Sup clicked:', e.target);
+                        const footnoteId = e.target.getAttribute('data-footnote');
+                        console.log('Footnote ID:', footnoteId);
+                        const footnote = document.getElementById(`footnote-${footnoteId}`);
+                        console.log('Footnote element:', footnote);
+                        if (footnote) {
+                            footnoteContent.innerHTML = footnote.innerHTML;
+                            footnotePopup.style.display = 'block';
+                            
+                            // Position the popup near the clicked footnote
+                            const rect = e.target.getBoundingClientRect();
+                            footnotePopup.style.top = `${window.scrollY + rect.bottom + 5}px`;
+                            footnotePopup.style.left = `${rect.left}px`;
+                            console.log('Footnote popup displayed');
+                        } else {
+                            console.log('Footnote not found');
+                        }
+                    });
+                });
+        
+                // Move footnote definitions to the hidden footnotes div
+                document.querySelectorAll('.footnote').forEach(footnote => {
+                    footnotes.appendChild(footnote);
+                });
+                console.log('Footnotes setup complete');
+            }
+        
+            closeButton.addEventListener('click', () => {
+                footnotePopup.style.display = 'none';
+            });
+
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!footnotePopup.contains(e.target) && !e.target.matches('sup[data-footnote]')) {
+                    footnotePopup.style.display = 'none';
+                }
+            });
+
+            // Back to top functionality
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                handleScroll();
+            });
+
+        });            
+    </script>
+</body>
+</html>

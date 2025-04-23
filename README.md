@@ -1,4 +1,4 @@
-README 13 July 2024
+README 23 April 2025
 
 Most [arguments](https://www.lesswrong.com/posts/HaGTQcxqjHPyR9Ju6/unpicking-extinction) about AI existential risk are designed to convince other humans, e.g. policymakers, civil society or the public. Therefore, they are often framed in a human-centric way ("AI safety should be about helping humans survive and flourish indefinitely").  This situation is improving in 2024 as we think more about s-risks and moral circle expansion to non-human animals and AIs.
 

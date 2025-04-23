@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quadrant Site</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: scroll;
+      /*font-family: 'CustomFont', sans-serif;*/
+      font-family: 'Josefin Sans', sans-serif;
+    }
+    .background-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200vw;
+      height: 200vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .overlay-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200vw;
+      height: 200vh;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .invertible-svg {
+      filter: invert(1);
+      background: rgba(0, 0, 0, 0.5);
+    }
+    #canvas {
+      display: grid;
+      grid-template-columns: 100vw 100vw;
+      grid-template-rows: 100vh 100vh;
+      width: 200vw;
+      height: 200vh;
+      position: relative;
+    }
+    .quadrant {
+      position: relative;
+      overflow-y: auto;
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+    .text {
+      font-size: 8pt;
+      line-height: 1.2;
+    }
+    .text h1, .text h2 {
+      cursor: pointer;
+    }
+    #q1 { background: #f0f0f0; }
+    #q2 { background: #e0e0ff; }
+    #q3 { background: #fefefe; }
+    #q4 { background: #fff0e0; }
+    .popup {
+      text-decoration: underline dotted;
+      cursor: pointer;
+      position: relative;
+    }
+    .popup sup {
+      font-size: 0.6em;
+      vertical-align: super;
+    }
+    .popup::after {
+      content: attr(data-note);
+      display: none;
+      position: absolute;
+      bottom: 1.5em;
+      left: 0;
+      background: #ffffe0;
+      color: black;
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      font-size: 6pt;
+      white-space: pre-wrap;
+      z-index: 100;
+      max-width: 250px;
+    }
+    .popup:hover::after,
+    .popup.show::after {
+      display: block;
+    }
+    .section-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .section-content.expanded { /* Note: No space between .section-content and .expanded */
+      max-height: 1000px; /* large enough to show full section */
+    }
+
+  </style>
+</head>
+<body>
+  <div id="canvas">
+    <img src="shoggoth.svg" alt="Background" class="overlay-svg invertible-svg" />
+    <div class="quadrant" id="q1">
+      <div class="text" id="content1">Loading...</div>
+    </div>
+    <div class="quadrant" id="q2">
+      <div class="text" id="content2">Loading...</div>
+    </div>
+    <div class="quadrant" id="q3">
+      <div class="text" id="content3">Loading...</div>
+    </div>
+    <div class="quadrant" id="q4">
+      <div class="text" id="content4">Loading...</div>
+    </div>
+  </div>
+  <script>
+    async function loadMarkdownSections() {
+      const resp = await fetch('epistle_faz.md');
+      const text = await resp.text();
+      const noStrike = text.replace(/~~.*?~~/gs, '');
+
+      // Parse footnotes
+      const footnotePairs = {};
+      const footnotes = [...text.matchAll(/\[\^(\d+)\]:\s*((?:[^\n]+(?:\n(?!\[\^\d+\]:).*)*)+)/g)];
+      footnotes.forEach(match => {
+        footnotePairs[match[1]] = match[2].trim();
+      });
+
+      // Parse bibliography
+      const biblioMatch = text.match(/## Bibliography[\s\S]*/);
+      let biblio = biblioMatch ? biblioMatch[0].trim() : '';
+      const biblioRefs = {};
+      biblio.split(/\n(?=[A-Z][a-z]+ \d{4})/).forEach(entry => {
+        const label = entry.match(/^([A-Z][a-z]+ \d{4})/);
+        if (label) biblioRefs[label[1]] = entry.trim();
+      });
+
+      // Clean body
+      let bodyOnly = noStrike
+        .replace(/\[\^\d+\]:.*(?:\n(?!\[\^\d+\]:).*)*/g, '')  // remove footnotes
+        .replace(/## Bibliography[\s\S]*/, '');               // remove biblio
+
+      // Replace footnote and biblio references with popups
+      bodyOnly = bodyOnly.replace(/\[\^(\d+)\]/g, (match, number) => {
+        const note = footnotePairs[number];
+        return note ? `<span class="popup" data-note="${note.replace(/"/g, '&quot;')}"><sup>[${number}]</sup></span>` : match;
+      });
+
+      bodyOnly = bodyOnly.replace(/\b([A-Z][a-z]+ \d{4})\b/g, (match) => {
+        const note = biblioRefs[match];
+        return note ? `<span class="popup" data-note="${note.replace(/"/g, '&quot;')}">${match}</span>` : match;
+      });
+
+      // Group content into sections based on headings
+      const lines = bodyOnly.split('\n');
+      const sections = [];
+      let current = null;
+
+      lines.forEach(line => {
+        const h1 = line.match(/^# (.*)/);
+        const h2 = line.match(/^## (.*)/);
+        if (h1 || h2) {
+          if (current) sections.push(current);
+          current = {
+            title: h1 ? h1[1] : h2[1],
+            level: h1 ? 'h1' : 'h2',
+            body: []
+          };
+        } else if (current && line.trim()) {
+          current.body.push(line.trim());
+        }
+      });
+
+      if (current) sections.push(current);
+
+      // Build HTML
+      const htmlSections = sections.map(({ title, level, body }) => {
+        const bodyHtml = body
+          .join('\n')
+          .split(/\n{2,}/)
+          .map(p => `<p>${p}</p>`)
+          .join('\n');
+        return `<${level}>${title}</${level}><div class="section-content">${bodyHtml}</div>`;
+      });
+
+      // Split into quadrants
+      const quarter = Math.ceil(htmlSections.length / 4);
+      document.getElementById('content1').innerHTML = htmlSections.slice(0, quarter).join('');
+      document.getElementById('content2').innerHTML = htmlSections.slice(quarter, 2 * quarter).join('');
+      document.getElementById('content3').innerHTML = htmlSections.slice(2 * quarter, 3 * quarter).join('');
+      document.getElementById('content4').innerHTML = htmlSections.slice(3 * quarter).join('');
+
+      // Add toggle behavior
+      document.querySelectorAll('h1, h2').forEach(header => {
+        header.addEventListener('click', () => {
+          const section = header.nextElementSibling;
+          if (section && section.classList.contains('section-content')) {
+            const expanded = section.classList.toggle('expanded');
+            if (expanded) {
+              section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        });
+      });
+    }
+
+
+    // Popup handling
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('popup')) {
+        document.querySelectorAll('.popup').forEach(p => p.classList.remove('show'));
+        e.target.classList.add('show');
+      } else {
+        document.querySelectorAll('.popup').forEach(p => p.classList.remove('show'));
+      }
+    });
+
+
+    // ✅ This line was missing!
+    window.addEventListener('load', loadMarkdownSections);
+
+  </script>
+</body>
+</html>

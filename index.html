@@ -22,6 +22,12 @@
     /* --- Keep Font Import --- */
     @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
 
+    @font-face {
+      font-family: 'MyCustomFont';
+      src: url('/SixtyfourConvergence-Regular-VariableFont_BLED,SCAN,XELA,YELA.ttf') format('truetype');
+    }
+
+
     @keyframes svgPulse {
       0%, 100% {
         opacity: 0.95;
@@ -30,6 +36,21 @@
         opacity: 0.4;
       }
     }
+
+    #angled-text {
+      position: fixed;
+      bottom: 400px;
+      right: 50px;
+      font-size: 108px;
+      font-family: 'MyCustomFont', sans-serif;
+      transform: rotate(-40deg);
+      transform-origin: bottom right;
+      color: white;
+      z-index: -5; /* Below everything but above background */
+      pointer-events: none; /* Don’t block clicks */
+      opacity: 0.7; /* Optional: slightly ghostly */
+    }
+
 
     #background-layer {
       position: fixed;
@@ -266,11 +287,93 @@
     .text h1 { font-size: 1.8em; color: #0cfb03;}
     .text h2 { font-size: 1.4em; color: #0cfb03;}
 
+    #x11-buttons {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10001;
+    }
+
+    #x11-buttons button {
+      font-family: 'MyCustomFont', monospace;
+      background: #ccc;
+      color: black;
+      border: 2px outset #999;
+      padding: 4px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #x11-buttons button:active {
+      border: 2px inset #999;
+    }
+
+    #x11-popup {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 60px;
+      width: 80vw;
+      height: 70vh;
+      background: #111;
+      color: #0f0;
+      border: 2px solid #999;
+      padding: 10px;
+      z-index: 10002;
+      box-shadow: 0 0 10px #000;
+      overflow: auto;
+    }
+
+    #x11-popup .x11-titlebar {
+      font-family: 'MyCustomFont', monospace;
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 5px;
+      text-align: right;
+    }
+
+    #x11-popup pre {
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 13px;
+      line-height: 1.4;
+    }
     
   </style>
 </head>
 <body>
   <div id="background-layer"></div>
+  <div id="x11-buttons">
+    <button data-file="epistle_faz.md">md version</button>
+    <button data-file="README.md">readme</button>
+  </div>
+  
+  <div id="x11-popup">
+    <div class="x11-titlebar">[Esc to Close]</div>
+    <pre id="x11-content"></pre>
+  </div>
+  
+  <div id="mobile-warning" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 2px 2px;
+    background: #222;
+    color: #f60404;
+    font-size: 0.85em;
+    text-align: center;
+    z-index: 10000;
+    font-family: sans-serif;
+  ">
+    Best viewed on a desktop or tablet.
+  </div>
+  <div id="angled-text">morbid<br> symptoms</div>
   <div id="canvas" class="fade-in-on-load">
     <img src="shoggoth.svg" alt="Background" class="overlay-svg" />
     <div class="quadrant" id="q1">
@@ -543,6 +646,33 @@
           }
         });
 
+        const popup = document.getElementById('x11-popup');
+        const content = document.getElementById('x11-content');
+
+        document.querySelectorAll('#x11-buttons button').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const file = btn.dataset.file;
+            try {
+              console.log(file);
+              const resp = await fetch(file);
+              console.log(resp);
+              const text = await resp.text();
+              content.textContent = text;
+              popup.style.display = 'block';
+            } catch (err) {
+              content.textContent = `Error loading ${file}`;
+              popup.style.display = 'block';
+            }
+          });
+        });
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            popup.style.display = 'none';
+          }
+        });
+
+
         // reposition if the user scrolls or resizes
         window.addEventListener('scroll',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
         window.addEventListener('resize',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
@@ -555,6 +685,19 @@
 
 
         window.addEventListener('load', loadMarkdownSections);
+
+        function isMobileDevice() {
+          return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        window.addEventListener('load', () => {
+          if (isMobileDevice()) {
+            document.getElementById('mobile-warning').style.display = 'block';
+            // optionally bump the body down to avoid covering content
+            document.body.style.paddingTop = '10px';
+          }
+        });
+
 
   </script>
 </body>

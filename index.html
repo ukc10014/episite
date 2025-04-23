@@ -261,6 +261,15 @@
       /* we’ll inject HTML via JS instead of content:attr() */
     }
 
+    #smiley {
+      position: fixed;
+      top: 50vh;
+      left: 50vw;
+      font-size: 32px;
+      z-index: -1; /* below text & SVG but above background */
+      pointer-events: none;
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
 
     /*.popup:hover::after,
     .popup.show::after {
@@ -348,7 +357,8 @@
   </style>
 </head>
 <body>
-  <div id="background-layer"></div>
+  <div id="background-layer"></div>]
+  <div id="smiley">😊</div>
   <div id="x11-buttons">
     <button data-file="epistle_faz.md">md version</button>
     <button data-file="README.md">readme</button>
@@ -716,6 +726,47 @@
             document.body.style.paddingTop = '10px';
           }
         });
+
+        // One shot function called in iffy (invoked function expression that doesn't pollute the global scope and only runs once) 
+        // that is used to animate the :-)
+        (function bounceSmiley() {
+          const smiley = document.getElementById('smiley');
+          let x = window.innerWidth / 2;
+          let y = window.innerHeight / 2;
+          let dx = 2 + Math.random(); // random velocity
+          let dy = 2 + Math.random();
+          let angle = 0;
+
+          function update() {
+            const size = 32;
+            const margin = 10;
+
+            x += dx;
+            y += dy;
+            angle += 3;
+
+            // bounce off walls
+            if (x < margin || x > window.innerWidth - margin - size) dx *= -1;
+            if (y < margin || y > window.innerHeight - margin - size) dy *= -1;
+
+            // optional: slight random walk
+            dx += (Math.random() - 0.5) * 0.2;
+            dy += (Math.random() - 0.5) * 0.2;
+
+            // clamp speed
+            dx = Math.max(-3, Math.min(3, dx));
+            dy = Math.max(-3, Math.min(3, dy));
+
+            smiley.style.left = `${x}px`;
+            smiley.style.top = `${y}px`;
+            smiley.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+
+            requestAnimationFrame(update);
+          }
+
+          update();
+        })();
+
 
 
   </script>

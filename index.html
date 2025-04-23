@@ -355,7 +355,7 @@
   </div>
   
   <div id="x11-popup">
-    <div class="x11-titlebar">[Esc to Close]</div>
+    <div class="x11-titlebar">[Tap/esc to Close]</div>
     <pre id="x11-content"></pre>
   </div>
   
@@ -673,6 +673,23 @@
             popup.style.display = 'none';
           }
         });
+
+        // So we can close the pop-ups on mobile
+        document.addEventListener('click', (e) => {
+          if (
+            popup.style.display === 'block' &&
+            !popup.contains(e.target) &&
+            !e.target.closest('#x11-buttons')
+          ) {
+            popup.style.display = 'none';
+          }
+        });
+
+        document.querySelector('#x11-popup .x11-titlebar').addEventListener('click', () => {
+          popup.style.display = 'none';
+        });
+
+
 
 
         // reposition if the user scrolls or resizes

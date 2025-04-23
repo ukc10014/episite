@@ -3,11 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quadrant Site</title>
+  <title>morbid symptoms</title>
   <style>
 
     /* --- Keep Font Import --- */
     @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
+
+    @keyframes svgPulse {
+      0%, 100% {
+        opacity: 0.95;
+      }
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    #background-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('Magellanic_Cloud.jpg') center center / cover no-repeat;
+      z-index: -10; /* Sit below all other elements */
+    }
+
 
     /* Bibliography list styling */
     .biblio-list {
@@ -29,7 +49,7 @@
       /* remove overflow: scroll; let content dictate scrolling */
       /* height: 100%; */ /* Optional: helps establish height context */
       font-family: 'Josefin Sans', sans-serif;
-      background-color: #f8f8f8; /* Add a light background to body */
+      /*background-color: #f8f8f8; /* Add a light background to body */
     }
 
     /* --- Remove SVG styles or adapt them --- */
@@ -59,6 +79,16 @@
       position: relative;
     }
 
+    .fade-in-on-load {
+      opacity: 0;
+      transition: opacity 1.5s ease-in;
+    }
+
+    .fade-in-on-load.loaded {
+      opacity: 1;
+    }
+
+
     /* ... other styles ... */
 
     .overlay-svg {
@@ -75,10 +105,10 @@
       object-fit: cover; /* Handle aspect ratio differences */
     }
     .invertible-svg {
-      filter: invert(1);
-      /* Background probably less relevant now opacity is used */
-      /* background: rgba(0, 0, 0, 0.5); */
+      filter: invert(1) brightness(1.8) contrast(1.2);
+      animation: svgPulse 1s ease-in-out infinite;
     }
+
 
     .quadrant {
       /* position: relative; */ /* Still needed for popup positioning */
@@ -90,7 +120,7 @@
       padding: 15px 20px; /* Padding inside quadrants */
       box-sizing: border-box;
       border: 1px solid #ddd; /* Visually separate quadrants */
-      background-color: #fff; /* Give quadrants a background */
+      background-color: #040000; /* Give quadrants a background */
       border-radius: 5px;
       /* --- Control Overflow --- */
       /* overflow-y: auto; */ /* REMOVE this - we want the quadrant ITSELF to grow */
@@ -148,7 +178,7 @@
       margin-bottom: 8px;
 
       /* styling */
-      background: #ffffe0;
+      background: #373731;
       border: 1px solid #ccc;
       padding: 8px 10px;
       font-size: 0.95em;
@@ -198,6 +228,7 @@
     .text {
       font-size: 11pt; /* Adjusted base font size */
       line-height: 1.4; /* Adjusted line height */
+      color: #d5fcdc;
     }
 
     .text p {
@@ -212,17 +243,18 @@
       padding-bottom: 5px;
       /* border-bottom: 1px solid #eee; */ /* Optional separator */
       font-weight: normal; /* Using Josefin Sans, normal might look better */
-      color: #333;
+      color: #d5fcdc;
     }
-    .text h1 { font-size: 1.8em; color: #111;}
-    .text h2 { font-size: 1.4em; color: #222;}
+    .text h1 { font-size: 1.8em; color: #0cfb03;}
+    .text h2 { font-size: 1.4em; color: #0cfb03;}
 
     
   </style>
 </head>
 <body>
-  <div id="canvas">
-    <img src="shoggoth.svg" alt="Background" class="overlay-svg invertible-svg" />
+  <div id="background-layer"></div>
+  <div id="canvas" class="fade-in-on-load">
+    <img src="shoggoth.svg" alt="Background" class="overlay-svg" />
     <div class="quadrant" id="q1">
       <div class="text" id="content1">Loading...</div>
     </div>
@@ -491,6 +523,12 @@
         // reposition if the user scrolls or resizes
         window.addEventListener('scroll',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
         window.addEventListener('resize',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
+
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            document.querySelector('#canvas').classList.add('loaded');
+          }, 1000); // 1 second delay
+        });
 
 
         window.addEventListener('load', loadMarkdownSections);

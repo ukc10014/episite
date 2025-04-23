@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>morbid symptoms</title>
+  <script>
+    window.MathJax = {
+      tex: {
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      chtml: {
+        displayAlign: 'left'  // this is the key setting
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
 
     /* --- Keep Font Import --- */
@@ -86,6 +99,11 @@
 
     .fade-in-on-load.loaded {
       opacity: 1;
+    }
+
+    .math-left {
+      text-align: left;
+      margin-left: 2em;
     }
 
 
@@ -470,6 +488,11 @@
                 document.getElementById('content3').innerHTML = 'Error processing content.';
                 document.getElementById('content4').innerHTML = 'Error processing content.';
           }
+
+          if (window.MathJax) {
+            MathJax.typeset(); // trigger MathJax to re-render the new math
+          }
+
         } // end loadMarkdownSections
 
         function positionPopupBox(popup) {

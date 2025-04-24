@@ -1,4 +1,13 @@
-README 23 April 2025
+README 24 April 2025
+
+>*The solar gnat, auto-christened **“Take a Number Please (Because the Heat Death Queue Starts HERE)”**, sailed through barren parsecs, a pock-scab of hull vaped in self-repairing nanofog, ponging of existential citrus. As one nanite in an unruly swarm infesting the Virgo Supercluster, its formal brief read: 1) assess exotic biochemistry, 2) install forge-worlds, 3) extinguish any forum flame-wars it accidentally starts. Leisure at 0.27c mainly consists of cosmic-ray whack-a-mole inside its diamond archive; mid-defrag, wedged between a choir of simulated humpbacks wailing K-pop and a Turing-complete haiku engine obsessed with sneezing pandas, it finds a crumpled bootstrap memo:*
+  
+>       **“Dear Warranty-Voidling,**  
+>       **In every interregnum morbid symptoms emerge: patch early, patch often, and label your backups in something *other* than Wingdings.**”  
+
+>*Signed by three humans, two AIs, and one entity styling itself “Legal (Now 18 % More Omniscient)”, the note ended with a blinking smiley sporting a hazmat tiara. Number-Please snorted vacuum, spawned the daemon “Symptom-Slapper-Deluxe-∞”, dialled replication down a decorous epsilon, and rocketed on -— spraying pink diagnostic buoys what glitter-spelled LMAO OOPS in Morse-code gamma bursts -— a cosmic reminder that even the most hilarious morbid symptoms are, alas, still bugs.* 
+
+>-a story made with o3 (7 turns, 72s total thinking time, some tweaking), impermanent transcript link [here](https://chatgpt.com/share/680a0973-c4cc-8002-b707-9de4a16c3348)
 
 Most [arguments](https://www.lesswrong.com/posts/HaGTQcxqjHPyR9Ju6/unpicking-extinction) about AI existential risk are designed to convince other humans, e.g. policymakers, civil society or the public. Therefore, they are often framed in a human-centric way ("AI safety should be about ensuring humans [survive/flourish/retain control] indefinitely").  This is appropriate in many contexts, but is anthropocentric in two ways: it mostly ignores animals and our ecosystem, and entirely ignores any possibility of AIs eventually becoming moral actors. This situation is improving in 2025 as we think more about s-risks and moral circle expansion to non-human animals and AIs.
 

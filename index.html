@@ -536,20 +536,6 @@
               // --- end injection ---
 
 
-              // --- Build HTML sections ---
-              // This part should work correctly now
-              /*const htmlSections = sections.map(({ title, level, body }) => {
-                const bodyHtml = body
-                    .join('\n') // Join lines preserving single newlines
-                    .split(/\n{2,}/) // Split into paragraphs on double+ newlines
-                    .map(p => p.trim())
-                    .filter(p => p) // Remove empty paragraphs
-                    // Replace single newlines within paragraphs with <br> before wrapping in <p>
-                    .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
-                    .join('');
-                return `<${level}>${title}</${level}><div class="section-content">${bodyHtml}</div>`;
-              });*/
-
               const htmlSections = sections.map(({ title, level, body }) => {
                 let bodyHtml;
                 if (/^sources$|^bibliography$/i.test(title)) {
@@ -665,14 +651,22 @@
           btn.addEventListener('click', async () => {
             const file = btn.dataset.file;
             try {
-              console.log(file);
               const resp = await fetch(file);
-              console.log(resp);
               const text = await resp.text();
-              content.textContent = text;
+              let htmlout;
+              console.log(text)
+              // ukc adding code to make popup md show up nicely
+              htmlout = text.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+              htmlout = htmlout.replace(/\*(.+?)\*/g,"<i>$1</i>")
+              htmlout = htmlout.replace(/\#(.+?)/g,"<h1>$1</h1>")
+              htmlout = htmlout.replace(/\#\#(.+?)/g,"<h2>$1</h2>")
+              htmlout = htmlout.replace(/\~\~(.+?)\~\~/g,"<s>$1</s>")
+              htmlout = htmlout.replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 200px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>');              htmlout = htmlout.replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>")
+              content.innerHTML = htmlout;
+
               popup.style.display = 'block';
             } catch (err) {
-              content.textContent = `Error loading ${file}`;
+              content.textContent = `Error loading ${file} ${err}`;
               popup.style.display = 'block';
             }
           });

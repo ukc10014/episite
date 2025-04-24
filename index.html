@@ -661,7 +661,7 @@
               htmlout = htmlout.replace(/\#(.+?)/g,"<h1>$1</h1>")
               htmlout = htmlout.replace(/\#\#(.+?)/g,"<h2>$1</h2>")
               htmlout = htmlout.replace(/\~\~(.+?)\~\~/g,"<s>$1</s>")
-              htmlout = htmlout.replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 200px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>');              htmlout = htmlout.replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>")
+              htmlout = htmlout.replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 70px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>');              htmlout = htmlout.replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>")
               content.innerHTML = htmlout;
 
               popup.style.display = 'block';

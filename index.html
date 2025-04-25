@@ -79,10 +79,27 @@
       line-height: 1.4;
     }
 
+    a {
+      color:#03dafb
+    }
+    
+    :root {
+      --bg: #fff;
+      --text: #000;
+      --accent: #111;
+    }
+
+    body.dark {
+      --bg: #000;
+      --text: #00ff00;
+      --accent: #0f0;
+    }
 
     body, html {
       margin: 0;
       padding: 0;
+      /*background-color: var(--bg);*/
+      color: var(--text); 
       /* remove overflow: scroll; let content dictate scrolling */
       /* height: 100%; */ /* Optional: helps establish height context */
       font-family: 'Josefin Sans', sans-serif;
@@ -162,7 +179,8 @@
       padding: 15px 20px; /* Padding inside quadrants */
       box-sizing: border-box;
       border: 1px solid #ddd; /* Visually separate quadrants */
-      background-color: #040000; /* Give quadrants a background */
+      background-color: var(--bg);
+      color: var(--text);
       border-radius: 5px;
       /* --- Control Overflow --- */
       /* overflow-y: auto; */ /* REMOVE this - we want the quadrant ITSELF to grow */
@@ -220,7 +238,8 @@
       margin-bottom: 8px;
 
       /* styling */
-      background: #373731;
+      background-color: var(--bg);
+      color: var(--text);
       border: 1px solid #ccc;
       padding: 8px 10px;
       font-size: 0.95em;
@@ -279,7 +298,7 @@
     .text {
       font-size: 11pt; /* Adjusted base font size */
       line-height: 1.4; /* Adjusted line height */
-      color: #d5fcdc;
+      color: var(--text);    
     }
 
     .text p {
@@ -304,7 +323,7 @@
       top: 10px;
       left: 10px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 6px;
       z-index: 10001;
     }
@@ -330,8 +349,8 @@
       left: 60px;
       width: 80vw;
       height: 70vh;
-      background: #111;
-      color: #0f0;
+      background-color: var(--bg);
+      color: var(--text);
       border: 2px solid #999;
       padding: 10px;
       z-index: 10002;
@@ -357,13 +376,14 @@
     
   </style>
 </head>
-<body>
+<body class="dark">
   <div id="background-layer"></div>]
   <div id="smiley">😊</div>
   <div id="x11-buttons">
-    <button data-file="epistle_faz.md">md version</button>
-    <button data-file="README.md">readme</button>
-  </div>
+    <button data-file="epistle_faz.md" data-popup="true">md version</button>
+    <button data-file="README.md" data-popup="true">readme</button>
+    <button id="theme-toggle">[dark]</button>
+      </div>
   
   <div id="x11-popup">
     <div class="x11-titlebar">[Tap/esc to Close]</div>
@@ -403,6 +423,7 @@
     </div>
   </div>
   <script>
+    
 
     async function loadMarkdownSections() {
           try { // Optional: Add try/catch for better error handling
@@ -650,6 +671,8 @@
 
         document.querySelectorAll('#x11-buttons button').forEach(btn => {
           btn.addEventListener('click', async () => {
+            if (!btn.dataset.popup) return; // ← skip if no popup wanted
+
             const file = btn.dataset.file;
             try {
               const resp = await fetch(file);
@@ -720,6 +743,22 @@
             // optionally bump the body down to avoid covering content
             document.body.style.paddingTop = '10px';
           }
+        });
+
+        // For setting the light or dark mode
+        const toggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        function updateThemeLabel() {
+          toggleBtn.textContent = body.classList.contains('dark') ? '[light]' : '[dark]';
+        }
+
+        // initial label
+        updateThemeLabel();
+
+        toggleBtn.addEventListener('click', () => {
+          body.classList.toggle('dark');
+          updateThemeLabel();
         });
 
         // One shot function called in iffy (invoked function expression that doesn't pollute the global scope and only runs once) 

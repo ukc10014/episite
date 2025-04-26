@@ -669,6 +669,7 @@
         const popup = document.getElementById('x11-popup');
         const content = document.getElementById('x11-content');
 
+        // for stuff like README, trcklined version etc
         document.querySelectorAll('#x11-buttons button').forEach(btn => {
           btn.addEventListener('click', async () => {
             if (!btn.dataset.popup) return; // ← skip if no popup wanted
@@ -686,6 +687,7 @@
               htmlout = htmlout.replace(/\#\#(.+?)/g,"<h2>$1</h2>")
               htmlout = htmlout.replace(/\~\~(.+?)\~\~/g,"<s>$1</s>")
               htmlout = htmlout.replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 70px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>');              htmlout = htmlout.replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>")
+              htmlout = htmlout.replace(/:flame:/g, "🔥");
               content.innerHTML = htmlout;
 
               popup.style.display = 'block';

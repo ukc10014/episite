@@ -227,6 +227,7 @@
     <button data-file="epistle_faz.md" data-popup="true">md version</button>
     <button data-file="README.md" data-popup="true">readme</button>
     <button id="theme-toggle">[dark]</button>
+    <button id="animation-toggle">[animations: on]</button>
   </div>
   <div id="x11-popup">
     <div class="x11-titlebar">[Tap/esc to Close]</div>
@@ -247,6 +248,9 @@
   </div>
 
   <script>
+    let animationsEnabled = true;
+
+
     // All the existing JavaScript from the second file ("morbid symptoms")
     // for loadMarkdownSections, positionPopupBox, event listeners,
     // bounceSmiley, theme toggle, mobile warning etc. should remain here.
@@ -501,6 +505,17 @@
         const body = document.body;
         function updateThemeLabel() { toggleBtn.textContent = body.classList.contains('dark') ? '[light]' : '[dark]'; }
         updateThemeLabel();
+
+        const animationToggleBtn = document.getElementById('animation-toggle');
+        function updateAnimationLabel() {
+          animationToggleBtn.textContent = animationsEnabled ? '[animations: on]' : '[animations: off]';
+        }
+        animationToggleBtn.addEventListener('click', () => {
+          animationsEnabled = !animationsEnabled;
+          updateAnimationLabel();
+        });
+        updateAnimationLabel();
+
         
         toggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark');
@@ -519,6 +534,7 @@
         (function bounceSmiley() {
           const smiley = document.getElementById('smiley'); let x = window.innerWidth / 2; let y = window.innerHeight / 2; let dx = 2 + Math.random(); let dy = 2 + Math.random(); let angle = 0;
           function update() {
+            if (!animationsEnabled) return;
             const size = 32; const margin = 10; x += dx; y += dy; angle += 3;
             if (x < margin || x > window.innerWidth - margin - size) dx *= -1; if (y < margin || y > window.innerHeight - margin - size) dy *= -1;
             dx += (Math.random() - 0.5) * 0.2; dy += (Math.random() - 0.5) * 0.2; dx = Math.max(-3, Math.min(3, dx)); dy = Math.max(-3, Math.min(3, dy));
@@ -528,28 +544,12 @@
         })();
     // --- END Existing JavaScript ---
 
-    // Only flickers in dark mode
-    /*(function quadrantStaticFlicker(){
-        function flicker(){
-            const isDark = document.body.classList.contains('dark');
-            document.querySelectorAll('.quadrant:not(.stable)').forEach(q => {
-            if (isDark) {
-                // dark-mode flicker
-                const alpha = 0.1 + Math.random() * 0.3;
-                q.style.backgroundColor = `rgba(0,0,0,${alpha})`;
-            } else {
-                // light mode: clear any old inline style so CSS takes over
-                q.style.backgroundColor = '';
-            }
-            });
-            setTimeout(flicker, 100 + Math.random() * 200);
-        }
-        flicker();
-        })();*/
 
         // (Assuming you still have `let flickerStopped = false;` from before.)
 
         (function quadrantSmoothFlicker(){
+        if (!animationsEnabled || flickerStopped) return;
+
         const start = performance.now();       // remember when we began
         function flicker(now) {
             if (flickerStopped) return;          // bail out after first click
@@ -646,6 +646,8 @@
 
     // --- p5.js Draw ---
     function draw() {
+        if (!animationsEnabled) return; // no animation toggle/global
+
         // Don't clear background if p5 canvas is behind opaque elements
         // background(0); // Optional: Keep if main content area is transparent
 

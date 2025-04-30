@@ -3,22 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>morbid symptoms</title>
+  <title>Morbid Symptoms (with p5.js Background)</title> 
+
   <script>
     window.MathJax = {
       tex: {
         displayMath: [['$$', '$$'], ['\\[', '\\]']]
       },
       chtml: {
-        displayAlign: 'left'  // this is the key setting
+        displayAlign: 'left'
       }
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <style>
 
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.min.js"></script> 
+
+  <style>
     /* --- Keep Font Import --- */
     @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap');
 
@@ -27,404 +28,233 @@
       src: url('fonts/sixtyfour.ttf') format('truetype');
     }
 
-
-
+    /* --- Animation --- */
     @keyframes svgPulse {
-      0%, 100% {
-        opacity: 0.95;
-      }
-      50% {
-        opacity: 0.4;
-      }
+      0%, 100% { opacity: 0.95; }
+      50% { opacity: 0.4; }
     }
 
+    /* Flicker animation for quadrants */
+    @keyframes quadrantFlicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* --- Text & UI Elements --- */
     #angled-text {
       position: fixed;
-      bottom: 400px;
+      bottom: 400px; /* Adjusted for potential overlap */
       right: 50px;
       font-size: 108px;
       font-family: 'SixtyFour', sans-serif;
       transform: rotate(-40deg);
       transform-origin: bottom right;
       color: white;
-      z-index: -5; /* Below everything but above background */
-      pointer-events: none; /* Don’t block clicks */
-      opacity: 0.7; /* Optional: slightly ghostly */
+      z-index: -5; /* Below content, above p5 */
+      pointer-events: none;
+      opacity: 0.7;
     }
 
+    /* --- !!! REMOVED Static Background Layer CSS !!! --- */
+    /* #background-layer { ... } */
 
-    #background-layer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: url('Magellanic_Cloud.jpg') center center / cover no-repeat;
-      z-index: -10; /* Sit below all other elements */
-      background-repeat: repeat;               /* ← this is the key */
-      background-size: auto;  
-    }
+    /* --- Bibliography Styling --- */
+    .biblio-list { padding-left: 1.2em; margin: 0.5em 0; list-style-type: disc; }
+    .biblio-list li { margin-bottom: 0.4em; line-height: 1.4; }
+    a { color:#03dafb; }
 
+    /* --- Theme Variables --- */
+    :root { --bg: #f5eee0fc; --text: #000; --accent: #f54804; }
+    body.dark { --bg: #000; --text: #00ff00; --accent: #0f0; }
 
-    /* Bibliography list styling */
-    .biblio-list {
-      padding-left: 1.2em;           /* indent list */
-      margin: 0.5em 0;
-      list-style-type: disc;         /* bullets */
-      /* list-style-type: "›"; */    /* or use a caret glyph */
-    }
+    /* --- Basic Body --- */
+    body, html { margin: 0; padding: 0; color: var(--text); font-family: 'Josefin Sans', sans-serif; }
 
-    .biblio-list li {
-      margin-bottom: 0.4em;
-      line-height: 1.4;
-    }
-
-    a {
-      color:#03dafb
-    }
-    
-    :root {
-      --bg: #f5eee0fc;
-      --text: #000;
-      --accent: #f54804;
-    }
-
-    body.dark {
-      --bg: #000;
-      --text: #00ff00;
-      --accent: #0f0;
-    }
-
-    body, html {
-      margin: 0;
-      padding: 0;
-      /*background-color: var(--bg);*/
-      color: var(--text); 
-      /* remove overflow: scroll; let content dictate scrolling */
-      /* height: 100%; */ /* Optional: helps establish height context */
-      font-family: 'Josefin Sans', sans-serif;
-      /*background-color: #f8f8f8; /* Add a light background to body */
-    }
-
-    /* --- Remove SVG styles or adapt them --- */
-    /* If keeping SVGs, they likely need different positioning now */
-    /* .background-svg, .overlay-svg { ... } */
-
+    /* --- Main Content Grid --- */
     #canvas {
-      /* --- Remove fixed large dimensions --- */
-      /* width: 200vw; */
-      /* height: 200vh; */
-
-      /* --- Use CSS Grid for layout --- */
       display: grid;
       grid-template-columns: repeat(2, minmax(300px, 1fr));
       grid-template-rows: repeat(2, auto);
       gap: 20px;
-
-      /* --- Control overall canvas size and centering --- */
       width: 95%;
       max-width: 1600px;
       min-height: 80vh;
       margin: 20px auto;
       padding: 10px;
       box-sizing: border-box;
+      position: relative; /* Crucial for positioning children like overlays */
+      /* Ensure canvas grid itself has a background or is transparent */
+      /* background-color: rgba(0, 0, 0, 0.5); */ /* Optional: slight dark overlay */
+      /*display: none;*/ /* <<< ADD THIS LINE TO HIDE */
 
-      /* --- !! IMPORTANT: Needed for absolute positioning of children !! --- */
-      position: relative;
     }
 
-    .fade-in-on-load {
-      opacity: 0;
-      transition: opacity 1.5s ease-in;
-    }
+    /* --- Fade-in Effect --- */
+    .fade-in-on-load { opacity: 0; transition: opacity 1.5s ease-in; }
+    .fade-in-on-load.loaded { opacity: 1; }
 
-    .fade-in-on-load.loaded {
-      opacity: 1;
-    }
+    /* --- Math Alignment --- */
+    .math-left { text-align: left; margin-left: 2em; }
 
-    .math-left {
-      text-align: left;
-      margin-left: 2em;
-    }
-
-
-    /* ... other styles ... */
-
+    /* --- SVG Overlay (Shoggoth) --- */
     .overlay-svg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      /* --- !! Adjust size to fit the relative parent (canvas) !! --- */
-      width: 100%;
-      height: 100%;
-      z-index: 10; /* Keep on top as it's an overlay */
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10; /* On top of quadrants */
       pointer-events: none;
-      /* --- !! Add opacity to see through it !! --- */
-      opacity: 0.15; /* Adjust value (0.0 to 1.0) as needed */
-      object-fit: cover; /* Handle aspect ratio differences */
+      opacity: 0.15; /* Semi-transparent */
+      object-fit: cover;
+      filter: invert(1) brightness(1.8) contrast(1.2); /* Apply dark theme inversion */
+      animation: svgPulse 1s ease-in-out infinite; /* Apply pulse */
     }
-    .invertible-svg {
-      filter: invert(1) brightness(1.8) contrast(1.2);
-      animation: svgPulse 1s ease-in-out infinite;
-    }
+    /* body:not(.dark) .invertible-svg { filter: none; } */ /* Optional: remove filter in light mode */
 
 
+    /* --- Quadrant Styling (with flicker) --- */
     .quadrant {
-      /* position: relative; */ /* Still needed for popup positioning */
       position: relative;
-      /* --- Let Grid handle sizing, remove fixed sizes --- */
-      /* width/height are now controlled by grid-template-columns/rows */
-
-      /* --- Styling and Content Flow --- */
-      padding: 15px 20px; /* Padding inside quadrants */
+      padding: 15px 20px;
       box-sizing: border-box;
-      border: 1px solid #ddd; /* Visually separate quadrants */
-      background-color: var(--bg);
+      border: 1px solid #ddd;
+      /* default light mode */
+      background-color: rgba(245, 238, 224, 0.8);
       color: var(--text);
       border-radius: 5px;
-      /* --- Control Overflow --- */
-      /* overflow-y: auto; */ /* REMOVE this - we want the quadrant ITSELF to grow */
-      overflow: visible; /* Default, allows content to expand the container */
-
-      /* Add a minimum height so they don't collapse entirely */
+      overflow: visible;
       min-height: 100px;
-
-      /* Smooth transition for size changes (optional, might be subtle) */
-      /* transition: height 0.4s ease; */ /* This might fight with max-height transition */
+      z-index: 1;
+    }
+    /* dark-mode quadrants */
+    body.dark .quadrant {
+      background-color: rgba(0, 0, 0, 0.6);
+      border-color: #444;
     }
 
-    /* --- Keep Section Content Expansion Styles --- */
+    /* stable (expanded) quadrants: full opaque overlay */
+    body.dark .quadrant.stable {
+      background-color: #000 !important;
+      color: #fff !important;
+    }
+    body:not(.dark) .quadrant.stable {
+      background-color: #fff !important;
+      color: #000 !important;
+    }
+    body:not(.dark) .quadrant.stable {
+      background-color: #fff !important;
+      color: #000 !important;
+    } 
+
+
+    /* --- Content Expansion Styling --- */
     .section-content {
-      max-height: 0;
-      /*overflow: visible !important;*/
-      overflow: hidden;
-      transition: max-height 0.4s ease-out; /* Keep transition */
-      /* Add some padding/margin when expanded for spacing */
-      padding-top: 0; /* Start padding at 0 */
-      margin-top: 0;
-      transition: max-height 0.4s ease-out, padding-top 0.4s ease-out, margin-top 0.4s ease-out; /* Transition padding too */
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s ease-out, padding-top 0.4s ease-out, margin-top 0.4s ease-out;
+      padding-top: 0; margin-top: 0;
+    }
+    .section-content.expanded { max-height: 10000px; padding-top: 10px; margin-top: 5px; }
+
+    /* --- Removed Background SVG Styling --- */
+    /* .background-svg { ... } */
+
+    /* --- Popup Styling --- */
+    .popup { position: relative; cursor: pointer; text-decoration: underline dotted; }
+    .popup .popup-box {
+      display: none; position: fixed; margin-bottom: 8px;
+      background-color: var(--bg); color: var(--text);
+      border: 1px solid #ccc; padding: 8px 10px;
+      font-size: 0.95em; line-height: 1.4; z-index: 100; /* High z-index */
+      white-space: normal; word-wrap: break-word; max-width: 90ch;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15); border-radius: 4px;
+    }
+    .popup:hover .popup-box, .popup.show .popup-box { display: block; }
+    .popup::after { content: ""; display: none; position: absolute; z-index: 1000; bottom: 100%; left: 0; margin-bottom: 8px; }
+
+    /* --- Smiley Styling --- */
+    #smiley {
+      position: fixed; top: 50vh; left: 50vw; font-size: 32px;
+      z-index: -1; /* Below quadrants but above p5 */
+      pointer-events: none; transform: translate(-50%, -50%) rotate(0deg);
     }
 
-
-
-    .section-content.expanded {
-      /* Use a large enough value, or consider alternatives if content can be HUGE */
-      max-height: 10000px; /* Increased max-height */
-      /* Add space only when expanded */
-      padding-top: 10px;
-      margin-top: 5px; /* Small margin between header and expanded content */
+    /* --- Text Content Styling --- */
+    .text { font-size: 11pt; line-height: 1.4; color: var(--text); }
+    .text p { margin-bottom: 1em; }
+    .text h1, .text h2 {
+      cursor: pointer; margin-top: 0; margin-bottom: 8px; padding-bottom: 5px;
+      font-weight: normal; color: #d5fcdc; /* Header color in dark mode */
     }
+    .text h1 { font-size: 1.8em; color: var(--accent); }
+    .text h2 { font-size: 1.4em; color: var(--accent); }
 
-    
-    .background-svg {
-      position: absolute;
+    body:not(.dark) .text h1, body:not(.dark) .text h2 {color: var(--text);  /* or simply #000 */
+}
+
+    /* --- X11 Buttons/Popup Styling --- */
+    #x11-buttons { position: fixed; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 10001; }
+    #x11-buttons button { font-family: 'SixtyFour', monospace; background: #ccc; color: black; border: 2px outset #999; padding: 4px 10px; font-size: 14px; cursor: pointer; }
+    #x11-buttons button:active { border: 2px inset #999; }
+    #x11-popup {
+      display: none; position: fixed; top: 60px; left: 60px; width: 80vw; height: 70vh;
+      background-color: var(--bg); color: var(--text); border: 2px solid #999;
+      padding: 10px; z-index: 10002; box-shadow: 0 0 10px #000; overflow: auto;
+    }
+    #x11-popup .x11-titlebar { font-family: 'SixtyFour', monospace; font-size: 12px; color: #999; margin-bottom: 5px; text-align: right; }
+    #x11-popup pre { font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 13px; line-height: 1.4; }
+
+    /* --- !!! ADDED p5 Container CSS !!! --- */
+    #p5-container {
+      position: fixed;
       top: 0;
       left: 0;
-      width: 200vw;
-      height: 200vh;
-      z-index: 0;
-      pointer-events: none;
+      width: 100vw;
+      height: 100vh;
+      z-index: -20; /* Position behind everything */
+      pointer-events: none; /* Allow clicks to pass through */
+    }
+    #p5-container canvas { /* Ensure canvas within container behaves */
+        display: block;
+        width: 100%;
+        height: 100%;
     }
 
-    .popup {
-      position: relative;
-      cursor: pointer;
-      text-decoration: underline dotted;
-    }
-
-    .popup .popup-box {
-      display: none;
-      position: fixed;
-      margin-bottom: 8px;
-
-      /* styling */
-      background-color: var(--bg);
-      color: var(--text);
-      border: 1px solid #ccc;
-      padding: 8px 10px;
-      font-size: 0.95em;
-      line-height: 1.4;
-      z-index: 10;
-
-      /* allow wrapping and arbitrary width */
-      white-space: normal;
-      word-wrap: break-word;
-      max-width: 90ch;   /* ~90 characters–adjust as you like */
-      /*max-height: none;
-      overflow: visible;*/
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      border-radius: 4px;
-    }
-
-    .popup:hover .popup-box,
-    .popup.show .popup-box {
-      display: block;
-    }
-
-    /*.popup sup {
-      font-size: 1em;
-      vertical-align: super;
-    }*/
-
-    .popup::after {
-      /* show above the reference marker */
-      bottom: 100%;
-      left: 0;
-      margin-bottom: 8px;
-
-      /* allow full HTML inside, not just plain-text */
-      content: "";
-      display: none;
-      position: absolute;
-      z-index: 1000;
-
-      /* we’ll inject HTML via JS instead of content:attr() */
-    }
-
-    #smiley {
-      position: fixed;
-      top: 50vh;
-      left: 50vw;
-      font-size: 32px;
-      z-index: -1; /* below text & SVG but above background */
-      pointer-events: none;
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-
-    /*.popup:hover::after,
-    .popup.show::after {
-      display: block;
-    }*/
-    .text {
-      font-size: 11pt; /* Adjusted base font size */
-      line-height: 1.4; /* Adjusted line height */
-      color: var(--text);    
-    }
-
-    .text p {
-      margin-bottom: 1em; /* Standard spacing, adjust as needed */
-      /* You could also use pixels (e.g., 16px) or other units */
-    }
-
-    .text h1, .text h2 {
-      cursor: pointer;
-      margin-top: 0; /* Remove default top margin */
-      margin-bottom: 8px; /* Space below header */
-      padding-bottom: 5px;
-      /* border-bottom: 1px solid #eee; */ /* Optional separator */
-      font-weight: normal; /* Using Josefin Sans, normal might look better */
-      color: #d5fcdc;
-    }
-    .text h1 { font-size: 1.8em; color: var(--accent);}
-    .text h2 { font-size: 1.4em; color: var(--accent);}
-
-    #x11-buttons {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      display: flex;
-      flex-direction: row;
-      gap: 6px;
-      z-index: 10001;
-    }
-
-    #x11-buttons button {
-      font-family: 'SixtyFour', monospace;
-      background: #ccc;
-      color: black;
-      border: 2px outset #999;
-      padding: 4px 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    #x11-buttons button:active {
-      border: 2px inset #999;
-    }
-
-    #x11-popup {
-      display: none;
-      position: fixed;
-      top: 60px;
-      left: 60px;
-      width: 80vw;
-      height: 70vh;
-      background-color: var(--bg);
-      color: var(--text);
-      border: 2px solid #999;
-      padding: 10px;
-      z-index: 10002;
-      box-shadow: 0 0 10px #000;
-      overflow: auto;
-    }
-
-    #x11-popup .x11-titlebar {
-      font-family: 'SixtyFour', monospace;
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 5px;
-      text-align: right;
-    }
-
-    #x11-popup pre {
-      font-family: monospace;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    
   </style>
 </head>
 <body class="dark">
-  <div id="background-layer"></div>]
+
+  <div id="p5-container"></div>
+
   <div id="smiley">😊</div>
   <div id="x11-buttons">
     <button data-file="epistle_faz.md" data-popup="true">md version</button>
     <button data-file="README.md" data-popup="true">readme</button>
     <button id="theme-toggle">[dark]</button>
-      </div>
-  
+  </div>
   <div id="x11-popup">
     <div class="x11-titlebar">[Tap/esc to Close]</div>
     <pre id="x11-content"></pre>
   </div>
-  
-  <div id="mobile-warning" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 2px 2px;
-    background: #222;
-    color: #f60404;
-    font-size: 0.85em;
-    text-align: center;
-    z-index: 10000;
-    font-family: sans-serif;
-  ">
+  <div id="mobile-warning" style="display: none; position: fixed; /* ... */">
     Best viewed on a desktop or tablet.
   </div>
   <div id="angled-text">morbid<br> symptoms</div>
-  <div id="canvas" class="fade-in-on-load">
-    <img src="shoggoth.svg" alt="Background" class="overlay-svg" />
-    <div class="quadrant" id="q1">
-      <div class="text" id="content1">Loading...</div>
-    </div>
-    <div class="quadrant" id="q2">
-      <div class="text" id="content2">Loading...</div>
-    </div>
-    <div class="quadrant" id="q3">
-      <div class="text" id="content3">Loading...</div>
-    </div>
-    <div class="quadrant" id="q4">
-      <div class="text" id="content4">Loading...</div>
-    </div>
-  </div>
-  <script>
-    
 
+
+  <div id="canvas" class="fade-in-on-load">
+    <img src="shoggoth.svg" alt="Background" class="overlay-svg invertible-svg" />
+    <div class="quadrant" id="q1"><div class="text" id="content1">Loading...</div></div>
+    <div class="quadrant" id="q2"><div class="text" id="content2">Loading...</div></div>
+    <div class="quadrant" id="q3"><div class="text" id="content3">Loading...</div></div>
+    <div class="quadrant" id="q4"><div class="text" id="content4">Loading...</div></div>
+  </div>
+
+  <script>
+    // All the existing JavaScript from the second file ("morbid symptoms")
+    // for loadMarkdownSections, positionPopupBox, event listeners,
+    // bounceSmiley, theme toggle, mobile warning etc. should remain here.
+    // ... (Paste the entire script block from the second file here) ...
+
+    // --- PASTE EXISTING SCRIPT HERE ---
+    // (Ensure functions like loadMarkdownSections, positionPopupBox,
+    // bounceSmiley, isMobileDevice, and all event listeners are included)
     async function loadMarkdownSections() {
           try { // Optional: Add try/catch for better error handling
               const resp = await fetch('epistle_faz.md');
@@ -497,12 +327,7 @@
                 }
               );
 
-
-
-
-
               // --- Group content into sections ---
-              // This part should now work correctly as bodyOnly is populated
               const lines = bodyOnly.split('\n');
               const sections = [];
               let current = null;
@@ -574,11 +399,7 @@
                 return `<${level}>${title}</${level}><div class="section-content">${bodyHtml}</div>`;
               });
 
-
-
-
               // --- Distribute into quadrants ---
-              // This part should work correctly now
               const quarter = Math.ceil(htmlSections.length / 4);
               document.getElementById('content1').innerHTML = htmlSections.slice(0, quarter).join('');
               document.getElementById('content2').innerHTML = htmlSections.slice(quarter, 2 * quarter).join('');
@@ -586,23 +407,20 @@
               document.getElementById('content4').innerHTML = htmlSections.slice(3 * quarter).join('');
 
               // --- Add toggle behavior ---
-              // This part remains the same
               document.querySelectorAll('#canvas h1, #canvas h2').forEach(header => {
                 header.addEventListener('click', () => {
-                  const section = header.nextElementSibling;
-                  if (section && section.classList.contains('section-content')) {
-                    const wasExpanded = section.classList.contains('expanded');
-                    section.classList.toggle('expanded');
-                    // Scroll header into view if it was just expanded
-                    if (!wasExpanded) {
-                      // Use timeout to allow layout to recalculate AFTER max-height transition starts
-                      setTimeout(() => {
-                            header.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                      }, 50); // Adjust delay if needed
+                    const section = header.nextElementSibling;
+                    const quad = header.closest('.quadrant');
+                    if (section && section.classList.contains('section-content')) {
+                    const expanded = section.classList.toggle('expanded');
+                    quad.classList.toggle('stable', expanded);
+                    if (expanded) {
+                        setTimeout(() => header.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
                     }
-                  }
+                    }
                 });
-              });
+                });
+
           } catch (error) {
               console.error("Error loading or processing markdown:", error);
               // Display error message in quadrants
@@ -621,190 +439,300 @@
         function positionPopupBox(popup) {
           const box = popup.querySelector('.popup-box');
           if (!box) return;
-
-          const margin = 8;  
+          const margin = 8;
           const rect = popup.getBoundingClientRect();
-          const boxW = box.offsetWidth;
-          const boxH = box.offsetHeight;
-          const vw = window.innerWidth;
-          const vh = window.innerHeight;
-
-          // try to place above
+          const boxW = box.offsetWidth; const boxH = box.offsetHeight;
+          const vw = window.innerWidth; const vh = window.innerHeight;
           let top = rect.top - boxH - margin;
-          if (top < margin) {
-            // not enough room above → drop below
-            top = rect.bottom + margin;
-          }
-
-          // align left, but shift left if it overflows right edge
+          if (top < margin) { top = rect.bottom + margin; }
           let left = rect.left;
-          if (left + boxW + margin > vw) {
-            left = vw - boxW - margin;
-          }
-
-          box.style.top  = `${top}px`;
-          box.style.left = `${left}px`;
+          if (left + boxW + margin > vw) { left = vw - boxW - margin; }
+          box.style.top  = `${top}px`; box.style.left = `${left}px`;
         }
 
-        // toggle & position on click
+        // Event listeners for popups, buttons, theme toggle, mobile warning, smiley etc.
+        // 1) at top of your script, add:
+        let flickerStopped = false;
+        document.addEventListener('click', () => {
+        flickerStopped = true;
+        }, { once: true });
+
+
         document.addEventListener('click', e => {
           const p = e.target.closest('.popup');
           if (p) {
             e.preventDefault();
-            // close others
-            document.querySelectorAll('.popup.show').forEach(o => {
-              if (o !== p) o.classList.remove('show');
-            });
-            // toggle this one
+            document.querySelectorAll('.popup.show').forEach(o => { if (o !== p) o.classList.remove('show'); });
             p.classList.toggle('show');
-            if (p.classList.contains('show')) {
-              positionPopupBox(p);
-            }
+            if (p.classList.contains('show')) { positionPopupBox(p); }
           } else {
-            // click outside → close all
             document.querySelectorAll('.popup.show').forEach(o => o.classList.remove('show'));
           }
         });
 
         const popup = document.getElementById('x11-popup');
         const content = document.getElementById('x11-content');
-
-        // for stuff like README, trcklined version etc
         document.querySelectorAll('#x11-buttons button').forEach(btn => {
           btn.addEventListener('click', async () => {
-            if (!btn.dataset.popup) return; // ← skip if no popup wanted
-
+            if (!btn.dataset.popup) return;
             const file = btn.dataset.file;
             try {
-              const resp = await fetch(file);
-              const text = await resp.text();
+              const resp = await fetch(file); const text = await resp.text();
               let htmlout;
-              console.log(text)
-              // ukc adding code to make popup md show up nicely
-              htmlout = text.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
-              htmlout = htmlout.replace(/\*(.+?)\*/g,"<i>$1</i>")
-              htmlout = htmlout.replace(/\#(.+?)/g,"<h1>$1</h1>")
-              htmlout = htmlout.replace(/\#\#(.+?)/g,"<h2>$1</h2>")
-              htmlout = htmlout.replace(/\~\~(.+?)\~\~/g,"<s>$1</s>")
-              htmlout = htmlout.replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 70px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>');              htmlout = htmlout.replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>")
-              htmlout = htmlout.replace(/:flame:/g, "🔥");
+              htmlout = text.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\*(.+?)\*/g,"<i>$1</i>").replace(/\#(.+?)/g,"<h1>$1</h1>").replace(/\#\#(.+?)/g,"<h2>$1</h2>").replace(/\~\~(.+?)\~\~/g,"<s>$1</s>").replace(/^>(.+?)(?:\n>|$)+/gms, '<div style="margin-left: 50px; margin-right: 70px; border-left: 2px solid #ccc; padding-left: 10px;">$1</div>').replace(/\[(.+?)\]\((.+?)\)/g,"<a href='$2'>$1</a>").replace(/:flame:/g, "🔥");
               content.innerHTML = htmlout;
-
               popup.style.display = 'block';
             } catch (err) {
-              content.textContent = `Error loading ${file} ${err}`;
-              popup.style.display = 'block';
+              content.textContent = `Error loading ${file} ${err}`; popup.style.display = 'block';
             }
           });
         });
 
-        document.addEventListener('keydown', e => {
-          if (e.key === 'Escape') {
-            popup.style.display = 'none';
-          }
-        });
-
-        // So we can close the pop-ups on mobile
-        document.addEventListener('click', (e) => {
-          if (
-            popup.style.display === 'block' &&
-            !popup.contains(e.target) &&
-            !e.target.closest('#x11-buttons')
-          ) {
-            popup.style.display = 'none';
-          }
-        });
-
-        document.querySelector('#x11-popup .x11-titlebar').addEventListener('click', () => {
-          popup.style.display = 'none';
-        });
-
-
-
-
-        // reposition if the user scrolls or resizes
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { popup.style.display = 'none'; } });
+        document.addEventListener('click', (e) => { if ( popup.style.display === 'block' && !popup.contains(e.target) && !e.target.closest('#x11-buttons') ) { popup.style.display = 'none'; } });
+        document.querySelector('#x11-popup .x11-titlebar').addEventListener('click', () => { popup.style.display = 'none'; });
         window.addEventListener('scroll',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
         window.addEventListener('resize',   () => document.querySelectorAll('.popup.show').forEach(positionPopupBox));
-
-        window.addEventListener('load', () => {
-          setTimeout(() => {
-            document.querySelector('#canvas').classList.add('loaded');
-          }, 1000); // 1 second delay
-        });
-
-
+        window.addEventListener('load', () => { setTimeout(() => { document.querySelector('#canvas').classList.add('loaded'); }, 1000); });
         window.addEventListener('load', loadMarkdownSections);
-
-        function isMobileDevice() {
-          return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        window.addEventListener('load', () => {
-          if (isMobileDevice()) {
-            document.getElementById('mobile-warning').style.display = 'block';
-            // optionally bump the body down to avoid covering content
-            document.body.style.paddingTop = '10px';
-          }
-        });
-
-        // For setting the light or dark mode
+        function isMobileDevice() { return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+        window.addEventListener('load', () => { if (isMobileDevice()) { document.getElementById('mobile-warning').style.display = 'block'; document.body.style.paddingTop = '10px'; } });
         const toggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
-
-        function updateThemeLabel() {
-          toggleBtn.textContent = body.classList.contains('dark') ? '[light]' : '[dark]';
-        }
-
-        // initial label
+        function updateThemeLabel() { toggleBtn.textContent = body.classList.contains('dark') ? '[light]' : '[dark]'; }
         updateThemeLabel();
-
+        
         toggleBtn.addEventListener('click', () => {
-          body.classList.toggle('dark');
-          updateThemeLabel();
-        });
+            body.classList.toggle('dark');
+            updateThemeLabel();
 
-        // One shot function called in iffy (invoked function expression that doesn't pollute the global scope and only runs once) 
-        // that is used to animate the :-)
+            // If we're now in light mode, remove any inline dark flicker
+            if (!body.classList.contains('dark')) {
+                document.querySelectorAll('.quadrant:not(.stable)').forEach(q => {
+                q.style.backgroundColor = '';
+                });
+            }
+            });
+
+        
+        
         (function bounceSmiley() {
-          const smiley = document.getElementById('smiley');
-          let x = window.innerWidth / 2;
-          let y = window.innerHeight / 2;
-          let dx = 2 + Math.random(); // random velocity
-          let dy = 2 + Math.random();
-          let angle = 0;
-
+          const smiley = document.getElementById('smiley'); let x = window.innerWidth / 2; let y = window.innerHeight / 2; let dx = 2 + Math.random(); let dy = 2 + Math.random(); let angle = 0;
           function update() {
-            const size = 32;
-            const margin = 10;
-
-            x += dx;
-            y += dy;
-            angle += 3;
-
-            // bounce off walls
-            if (x < margin || x > window.innerWidth - margin - size) dx *= -1;
-            if (y < margin || y > window.innerHeight - margin - size) dy *= -1;
-
-            // optional: slight random walk
-            dx += (Math.random() - 0.5) * 0.2;
-            dy += (Math.random() - 0.5) * 0.2;
-
-            // clamp speed
-            dx = Math.max(-3, Math.min(3, dx));
-            dy = Math.max(-3, Math.min(3, dy));
-
-            smiley.style.left = `${x}px`;
-            smiley.style.top = `${y}px`;
-            smiley.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-
+            const size = 32; const margin = 10; x += dx; y += dy; angle += 3;
+            if (x < margin || x > window.innerWidth - margin - size) dx *= -1; if (y < margin || y > window.innerHeight - margin - size) dy *= -1;
+            dx += (Math.random() - 0.5) * 0.2; dy += (Math.random() - 0.5) * 0.2; dx = Math.max(-3, Math.min(3, dx)); dy = Math.max(-3, Math.min(3, dy));
+            smiley.style.left = `${x}px`; smiley.style.top = `${y}px`; smiley.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
             requestAnimationFrame(update);
-          }
+          } update();
+        })();
+    // --- END Existing JavaScript ---
 
-          update();
+    // Only flickers in dark mode
+    /*(function quadrantStaticFlicker(){
+        function flicker(){
+            const isDark = document.body.classList.contains('dark');
+            document.querySelectorAll('.quadrant:not(.stable)').forEach(q => {
+            if (isDark) {
+                // dark-mode flicker
+                const alpha = 0.1 + Math.random() * 0.3;
+                q.style.backgroundColor = `rgba(0,0,0,${alpha})`;
+            } else {
+                // light mode: clear any old inline style so CSS takes over
+                q.style.backgroundColor = '';
+            }
+            });
+            setTimeout(flicker, 100 + Math.random() * 200);
+        }
+        flicker();
+        })();*/
+
+        // (Assuming you still have `let flickerStopped = false;` from before.)
+
+        (function quadrantSmoothFlicker(){
+        const start = performance.now();       // remember when we began
+        function flicker(now) {
+            if (flickerStopped) return;          // bail out after first click
+            const t = (now - start) / 1000;      // seconds since start
+            // α will oscillate around 0.2, with amplitude 0.1:
+            const alpha = 0.6 + Math.sin(t * 2) * 0.1;
+            document
+            .querySelectorAll('body.dark .quadrant:not(.stable)')
+            .forEach(q => {
+                q.style.backgroundColor = `rgba(0,0,0,${alpha})`;
+            });
+            requestAnimationFrame(flicker);     // schedule next frame
+        }
+        requestAnimationFrame(flicker);
         })();
 
 
 
+
+
   </script>
+
+  <!-- // --- !!!  p5.js Sketch Script !!! -->
+  <script>
+    // --- p5.js Sketch Global Variables ---
+    let asteroidTexture;
+    let rockBaseColor;
+    let starTexture;
+    let asteroidGeo; // Stores the custom mesh
+
+    // Asteroid properties (Using geometry now, width/height less direct)
+    let rotX = 0, rotY = 0, rotZ = 0;
+    let rotSpeedX, rotSpeedY, rotSpeedZ;
+
+    // Orbit properties
+    let orbitRadiusA = 10000;
+    let orbitRadiusB = 5000;
+    let orbitAngle = 0;
+    let orbitSpeed = 0.0005;
+
+    // Skysphere properties
+    let skySphereRadius = 15000; // Use the large radius that worked
+
+    // Camera properties
+    let camDist = 205; // Base distance factor (Adjust if needed)
+
+    // --- p5.js Preload ---
+    function preload() {
+        // Ensure path is correct relative to this HTML file
+        starTexture = loadImage('axelmellinger_mwpan2_Merc_2000x1200.jpg');
+    }
+
+    // --- p5.js Setup ---
+    function setup() {
+        // Create canvas and parent it to the container div
+        let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
+        canvas.parent('p5-container'); // <<< Attach canvas here
+
+        rockBaseColor = color(120, 110, 110); // Adjusted color slightly
+
+        // --- Create Asteroid Texture ---
+        let textureWidth = 512; let textureHeight = 512;
+        asteroidTexture = createGraphics(textureWidth, textureHeight);
+        asteroidTexture.background(rockBaseColor);
+        asteroidTexture.fill(160, 60, 70, 180); // Darker pockmarks
+        asteroidTexture.noStroke();
+        for (let i = 0; i < 150; i++) {
+            let x = random(textureWidth); let y = random(textureHeight);
+            let d = random(5, 25);
+            asteroidTexture.ellipse(x, y, d, d * random(0.7, 1.3));
+        }
+        // Emoji/Text - Keep colors from original p5 sketch if preferred
+        asteroidTexture.fill(200, 200, 150); // Yellow
+        asteroidTexture.textSize(64); asteroidTexture.textAlign(CENTER, CENTER);
+        asteroidTexture.text('😊', textureWidth * 0.5, textureHeight * 0.3);
+        asteroidTexture.textSize(48);
+        asteroidTexture.text('長崎', textureWidth * 0.5, textureHeight * 0.6);
+        asteroidTexture.textSize(40);
+        asteroidTexture.text('770.349', textureWidth * 0.5, textureHeight * 0.75);
+        // --- End Asteroid Texture ---
+
+        // --- Create Asteroid Geometry ---
+        let asteroidLength = 700; let asteroidThickness = 40; let meshDetail = 20;
+        asteroidGeo = createAsteroidGeometry(asteroidLength / 2, asteroidThickness / 2, meshDetail);
+        // --- End Asteroid Geometry ---
+
+        // Initialize random rotation speeds
+        rotSpeedX = random(-0.01, 0.01);
+        rotSpeedY = random(-0.01, 0.01);
+        rotSpeedZ = random(-0.0, 0.1);
+
+        console.log("p5 setup complete. Star Texture:", starTexture); // Check loading
+    }
+
+    // --- p5.js Draw ---
+    function draw() {
+        // Don't clear background if p5 canvas is behind opaque elements
+        // background(0); // Optional: Keep if main content area is transparent
+
+        // --- Calculate Positions ---
+        orbitAngle += orbitSpeed;
+        let asteroidX = orbitRadiusA * cos(orbitAngle);
+        let asteroidY = 0;
+        let asteroidZ = orbitRadiusB * sin(orbitAngle);
+        rotX += rotSpeedX; rotY += rotSpeedY; rotZ += rotSpeedZ;
+        let eyeX = 0; let eyeY = 800; let eyeZ = camDist + 2500; // Adjust camDist if needed
+        let lookAtX = asteroidX; let lookAtY = asteroidY; let lookAtZ = asteroidZ;
+        // --- End Calculations ---
+
+        // --- Set Custom Perspective (Needed for large skysphere) ---
+        let fieldOfView = PI / 6.0; let aspectRatio = width / height;
+        let nearClip = 10; // Fine-tune if needed
+        let farClip = skySphereRadius * 3; // Ensure far plane includes sphere
+        perspective(fieldOfView, aspectRatio, nearClip, farClip);
+        // --- End Custom Perspective ---
+
+        // --- Draw Skysphere ---
+        push();
+        translate(eyeX, eyeY, eyeZ); // Center on camera's eye
+        noLights(); textureMode(NORMAL); texture(starTexture); noStroke();
+        let gl = drawingContext; gl.disable(gl.DEPTH_TEST); // Draw behind everything
+        push(); scale(-1, -1, -1); sphere(skySphereRadius); pop(); // Invert sphere
+        gl.enable(gl.DEPTH_TEST); // Restore depth testing
+        pop();
+        // --- End Skysphere ---
+
+        // --- Set Camera View ---
+        camera(eyeX, eyeY, eyeZ, lookAtX, lookAtY, lookAtZ, 0, 1, 0);
+        // --- End Camera View ---
+
+        // --- Draw Asteroid ---
+        push();
+        translate(asteroidX, asteroidY, asteroidZ);
+        rotateX(rotX); rotateY(rotY); rotateZ(rotZ);
+        texture(asteroidTexture); textureMode(NORMAL); noStroke();
+        model(asteroidGeo); // Draw the custom mesh
+        pop();
+        // --- End Asteroid ---
+    }
+
+    // --- p5.js Asteroid Geometry Function ---
+    function createAsteroidGeometry(targetRadiusY, radiusXZ, detail) {
+        let geo = new p5.Geometry();
+        const noiseScale = 0.05;
+        const displacementScale = targetRadiusY * 0.2;
+
+        for (let i = 0; i <= detail; i++) { // Latitude
+            let lat = map(i, 0, detail, -HALF_PI, HALF_PI);
+            let r1 = cos(lat);
+            for (let j = 0; j <= detail; j++) { // Longitude
+                let lon = map(j, 0, detail, 0, TWO_PI);
+                let basePos = createVector(radiusXZ * r1 * cos(lon), targetRadiusY * sin(lat), radiusXZ * r1 * sin(lon));
+                let noiseX = noise(basePos.x * noiseScale + 100, basePos.y * noiseScale + 100, basePos.z * noiseScale + 100);
+                let noiseY = noise(basePos.x * noiseScale + 200, basePos.y * noiseScale + 200, basePos.z * noiseScale + 200);
+                let noiseZ = noise(basePos.x * noiseScale + 300, basePos.y * noiseScale + 300, basePos.z * noiseScale + 300);
+                let displacement = createVector((noiseX - 0.5), (noiseY - 0.5), (noiseZ - 0.5));
+                displacement.mult(displacementScale);
+                let finalPos = p5.Vector.add(basePos, displacement);
+                geo.vertices.push(finalPos);
+                let u = j / detail; let v = i / detail;
+                geo.uvs.push([u, v]);
+            }
+        }
+        for (let i = 0; i < detail; i++) {
+            for (let j = 0; j < detail; j++) {
+                let index1 = i * (detail + 1) + j; let index2 = index1 + 1;
+                let index3 = index1 + (detail + 1); let index4 = index3 + 1;
+                geo.faces.push([index1, index3, index2]); geo.faces.push([index2, index3, index4]);
+            }
+        }
+        geo.computeNormals();
+        console.log(`Asteroid Geometry created: ${geo.vertices.length} vertices, ${geo.faces.length} faces`);
+        return geo;
+    }
+
+    // Add windowResized function for p5 canvas responsiveness
+    function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        // You might need to recalculate perspective if aspect ratio changes significantly
+        // Or just let the next draw() call handle it
+    }
+
+  </script>
+
 </body>
 </html>

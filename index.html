@@ -159,6 +159,11 @@
     }
     .section-content.expanded { max-height: 10000px; padding-top: 10px; margin-top: 5px; }
 
+    .section-content.expanded p {
+        font-size: 1.5em; /* This will make the font size 10% larger than inherited */
+    }
+
+
     /* --- Removed Background SVG Styling --- */
     /* .background-svg { ... } */
 
@@ -232,9 +237,10 @@
   <div id="smiley">😊</div>
   <div id="x11-buttons">
     <button data-file="README.md" data-popup="true">readme</button>
-    <button data-file="epistle_faz.md" data-popup="true">md version</button>
+    <button data-file="epistle_faz.md" data-popup="true">markdown</button>
     <button id="theme-toggle">[dark]</button>
     <button id="animation-toggle">[animations: on]</button>
+    <button id="archive-popup">v2024</button>
   </div>
   <div id="x11-popup">
     <div class="x11-titlebar">[Tap/esc to Close]</div>
@@ -574,6 +580,15 @@
         })();
 
 
+        const archiveButton = document.getElementById('archive-popup');
+
+        if (archiveButton) {
+            archiveButton.addEventListener('click', function() {
+                // Replace 'YOUR_PAGE_URL_HERE.html' with the actual URL
+                const targetUrl = 'old_index.html';
+                window.open(targetUrl, '_blank');
+            });
+        }
 
 
 

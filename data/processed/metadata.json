@@ -1,0 +1,2538 @@
+{
+  "starCount": 119626,
+  "bytesPerStar": 28,
+  "floatsPerStar": 7,
+  "fieldOrder": [
+    "x",
+    "y",
+    "z",
+    "absMag",
+    "r",
+    "g",
+    "b"
+  ],
+  "bounds": {
+    "x": [
+      -325994.2,
+      326098.51
+    ],
+    "y": [
+      -326088.31,
+      326143.17
+    ],
+    "z": [
+      -326041.79,
+      325707.58
+    ]
+  },
+  "magnitudeRange": [
+    -26.7,
+    21.0
+  ],
+  "distanceRange": [
+    0.0,
+    326156.78
+  ],
+  "namedStars": [
+    {
+      "name": "Sol",
+      "index": 0,
+      "appMag": -26.7
+    },
+    {
+      "name": "Sirius",
+      "index": 32263,
+      "appMag": -1.44
+    },
+    {
+      "name": "Canopus",
+      "index": 30365,
+      "appMag": -0.62
+    },
+    {
+      "name": "Arcturus",
+      "index": 69450,
+      "appMag": -0.05
+    },
+    {
+      "name": "Rigil Kentaurus",
+      "index": 71455,
+      "appMag": -0.01
+    },
+    {
+      "name": "Vega",
+      "index": 90978,
+      "appMag": 0.03
+    },
+    {
+      "name": "Capella",
+      "index": 24549,
+      "appMag": 0.08
+    },
+    {
+      "name": "Rigel",
+      "index": 24378,
+      "appMag": 0.18
+    },
+    {
+      "name": "Procyon",
+      "index": 37173,
+      "appMag": 0.4
+    },
+    {
+      "name": "Achernar",
+      "index": 7574,
+      "appMag": 0.45
+    },
+    {
+      "name": "Betelgeuse",
+      "index": 27919,
+      "appMag": 0.45
+    },
+    {
+      "name": "Hadar",
+      "index": 68482,
+      "appMag": 0.61
+    },
+    {
+      "name": "Altair",
+      "index": 97337,
+      "appMag": 0.76
+    },
+    {
+      "name": "Acrux",
+      "index": 60529,
+      "appMag": 0.77
+    },
+    {
+      "name": "Aldebaran",
+      "index": 21368,
+      "appMag": 0.87
+    },
+    {
+      "name": "Spica",
+      "index": 65268,
+      "appMag": 0.98
+    },
+    {
+      "name": "Antares",
+      "index": 80518,
+      "appMag": 1.06
+    },
+    {
+      "name": "Pollux",
+      "index": 37718,
+      "appMag": 1.16
+    },
+    {
+      "name": "Fomalhaut",
+      "index": 113007,
+      "appMag": 1.17
+    },
+    {
+      "name": "Mimosa",
+      "index": 62238,
+      "appMag": 1.25
+    },
+    {
+      "name": "Deneb",
+      "index": 101766,
+      "appMag": 1.25
+    },
+    {
+      "name": "Toliman",
+      "index": 71452,
+      "appMag": 1.35
+    },
+    {
+      "name": "Regulus",
+      "index": 49528,
+      "appMag": 1.36
+    },
+    {
+      "name": "Adhara",
+      "index": 33492,
+      "appMag": 1.5
+    },
+    {
+      "name": "Castor",
+      "index": 36744,
+      "appMag": 1.58
+    },
+    {
+      "name": "Gacrux",
+      "index": 60892,
+      "appMag": 1.59
+    },
+    {
+      "name": "Shaula",
+      "index": 85664,
+      "appMag": 1.62
+    },
+    {
+      "name": "Bellatrix",
+      "index": 25273,
+      "appMag": 1.64
+    },
+    {
+      "name": "Elnath",
+      "index": 25364,
+      "appMag": 1.65
+    },
+    {
+      "name": "Miaplacidus",
+      "index": 45106,
+      "appMag": 1.67
+    },
+    {
+      "name": "Alnilam",
+      "index": 26246,
+      "appMag": 1.69
+    },
+    {
+      "name": "Alnair",
+      "index": 108921,
+      "appMag": 1.73
+    },
+    {
+      "name": "Alnitak",
+      "index": 26662,
+      "appMag": 1.74
+    },
+    {
+      "name": "Gam2Vel",
+      "index": 39840,
+      "appMag": 1.75
+    },
+    {
+      "name": "Alioth",
+      "index": 62756,
+      "appMag": 1.76
+    },
+    {
+      "name": "Mirfak",
+      "index": 15824,
+      "appMag": 1.79
+    },
+    {
+      "name": "Kaus Australis",
+      "index": 89905,
+      "appMag": 1.79
+    },
+    {
+      "name": "Dubhe",
+      "index": 53905,
+      "appMag": 1.81
+    },
+    {
+      "name": "Wezen",
+      "index": 34354,
+      "appMag": 1.83
+    },
+    {
+      "name": "Alkaid",
+      "index": 67087,
+      "appMag": 1.85
+    },
+    {
+      "name": "Avior",
+      "index": 40921,
+      "appMag": 1.86
+    },
+    {
+      "name": "Sargas",
+      "index": 85964,
+      "appMag": 1.86
+    },
+    {
+      "name": "Menkalinan",
+      "index": 28288,
+      "appMag": 1.9
+    },
+    {
+      "name": "Atria",
+      "index": 82021,
+      "appMag": 1.91
+    },
+    {
+      "name": "Alhena",
+      "index": 31601,
+      "appMag": 1.93
+    },
+    {
+      "name": "Alsephina",
+      "index": 42794,
+      "appMag": 1.93
+    },
+    {
+      "name": "Peacock",
+      "index": 100424,
+      "appMag": 1.94
+    },
+    {
+      "name": "Polaris",
+      "index": 11734,
+      "appMag": 1.97
+    },
+    {
+      "name": "Mirzam",
+      "index": 30251,
+      "appMag": 1.98
+    },
+    {
+      "name": "Alphard",
+      "index": 46259,
+      "appMag": 1.99
+    },
+    {
+      "name": "Hamal",
+      "index": 9861,
+      "appMag": 2.01
+    },
+    {
+      "name": "Algieba",
+      "index": 50440,
+      "appMag": 2.01
+    },
+    {
+      "name": "Diphda",
+      "index": 3413,
+      "appMag": 2.04
+    },
+    {
+      "name": "Nunki",
+      "index": 92563,
+      "appMag": 2.05
+    },
+    {
+      "name": "Menkent",
+      "index": 68713,
+      "appMag": 2.06
+    },
+    {
+      "name": "Alpheratz",
+      "index": 676,
+      "appMag": 2.07
+    },
+    {
+      "name": "Mirach",
+      "index": 5436,
+      "appMag": 2.07
+    },
+    {
+      "name": "Saiph",
+      "index": 27298,
+      "appMag": 2.07
+    },
+    {
+      "name": "Kochab",
+      "index": 72379,
+      "appMag": 2.07
+    },
+    {
+      "name": "Tiaki",
+      "index": 111767,
+      "appMag": 2.07
+    },
+    {
+      "name": "Rasalhague",
+      "index": 85768,
+      "appMag": 2.08
+    },
+    {
+      "name": "Algol",
+      "index": 14540,
+      "appMag": 2.09
+    },
+    {
+      "name": "Almach",
+      "index": 9618,
+      "appMag": 2.1
+    },
+    {
+      "name": "Denebola",
+      "index": 57458,
+      "appMag": 2.14
+    },
+    {
+      "name": "Cih",
+      "index": 4417,
+      "appMag": 2.15
+    },
+    {
+      "name": "Gam Cen",
+      "index": 61738,
+      "appMag": 2.2
+    },
+    {
+      "name": "Naos",
+      "index": 39318,
+      "appMag": 2.21
+    },
+    {
+      "name": "Aspidiske",
+      "index": 45425,
+      "appMag": 2.21
+    },
+    {
+      "name": "Alphecca",
+      "index": 76034,
+      "appMag": 2.22
+    },
+    {
+      "name": "Suhail",
+      "index": 44689,
+      "appMag": 2.23
+    },
+    {
+      "name": "Mizar",
+      "index": 65172,
+      "appMag": 2.23
+    },
+    {
+      "name": "Sadr",
+      "index": 100127,
+      "appMag": 2.23
+    },
+    {
+      "name": "Schedar",
+      "index": 3172,
+      "appMag": 2.24
+    },
+    {
+      "name": "Eltanin",
+      "index": 87560,
+      "appMag": 2.24
+    },
+    {
+      "name": "Mintaka",
+      "index": 25865,
+      "appMag": 2.25
+    },
+    {
+      "name": "Caph",
+      "index": 744,
+      "appMag": 2.28
+    },
+    {
+      "name": "Eps Cen",
+      "index": 66446,
+      "appMag": 2.29
+    },
+    {
+      "name": "Dschubba",
+      "index": 78164,
+      "appMag": 2.29
+    },
+    {
+      "name": "Larawag",
+      "index": 82143,
+      "appMag": 2.29
+    },
+    {
+      "name": "Alp Lup",
+      "index": 71633,
+      "appMag": 2.3
+    },
+    {
+      "name": "Eta Cen",
+      "index": 71124,
+      "appMag": 2.33
+    },
+    {
+      "name": "Merak",
+      "index": 53754,
+      "appMag": 2.34
+    },
+    {
+      "name": "Izar",
+      "index": 71878,
+      "appMag": 2.35
+    },
+    {
+      "name": "Enif",
+      "index": 106971,
+      "appMag": 2.38
+    },
+    {
+      "name": "Kap Sco",
+      "index": 86402,
+      "appMag": 2.39
+    },
+    {
+      "name": "Ankaa",
+      "index": 2076,
+      "appMag": 2.4
+    },
+    {
+      "name": "Phecda",
+      "index": 57827,
+      "appMag": 2.41
+    },
+    {
+      "name": "Sabik",
+      "index": 83754,
+      "appMag": 2.43
+    },
+    {
+      "name": "Scheat",
+      "index": 113520,
+      "appMag": 2.44
+    },
+    {
+      "name": "Aludra",
+      "index": 35806,
+      "appMag": 2.45
+    },
+    {
+      "name": "Alderamin",
+      "index": 104860,
+      "appMag": 2.45
+    },
+    {
+      "name": "Markeb",
+      "index": 45809,
+      "appMag": 2.47
+    },
+    {
+      "name": "Aljanah",
+      "index": 102156,
+      "appMag": 2.48
+    },
+    {
+      "name": "Markab",
+      "index": 113602,
+      "appMag": 2.49
+    },
+    {
+      "name": "Menkar",
+      "index": 14100,
+      "appMag": 2.54
+    },
+    {
+      "name": "13Zet Oph",
+      "index": 81129,
+      "appMag": 2.54
+    },
+    {
+      "name": "Zet Cen",
+      "index": 67785,
+      "appMag": 2.55
+    },
+    {
+      "name": "Zosma",
+      "index": 54711,
+      "appMag": 2.56
+    },
+    {
+      "name": "Acrab",
+      "index": 78579,
+      "appMag": 2.56
+    },
+    {
+      "name": "Arneb",
+      "index": 25920,
+      "appMag": 2.58
+    },
+    {
+      "name": "Del Cen",
+      "index": 59015,
+      "appMag": 2.58
+    },
+    {
+      "name": "Gienah",
+      "index": 59620,
+      "appMag": 2.58
+    },
+    {
+      "name": "Ascella",
+      "index": 93212,
+      "appMag": 2.6
+    },
+    {
+      "name": "Zubeneschamali",
+      "index": 74555,
+      "appMag": 2.61
+    },
+    {
+      "name": "Unukalhai",
+      "index": 76834,
+      "appMag": 2.63
+    },
+    {
+      "name": "Sheratan",
+      "index": 8884,
+      "appMag": 2.64
+    },
+    {
+      "name": "Phact",
+      "index": 26569,
+      "appMag": 2.65
+    },
+    {
+      "name": "Mahasim",
+      "index": 28309,
+      "appMag": 2.65
+    },
+    {
+      "name": "Kraz",
+      "index": 61165,
+      "appMag": 2.65
+    },
+    {
+      "name": "Ruchbah",
+      "index": 6672,
+      "appMag": 2.66
+    },
+    {
+      "name": "Muphrid",
+      "index": 67710,
+      "appMag": 2.68
+    },
+    {
+      "name": "Bet Lup",
+      "index": 73045,
+      "appMag": 2.68
+    },
+    {
+      "name": "Hassaleh",
+      "index": 22961,
+      "appMag": 2.69
+    },
+    {
+      "name": "Mu  Vel",
+      "index": 52575,
+      "appMag": 2.69
+    },
+    {
+      "name": "Alp Mus",
+      "index": 61391,
+      "appMag": 2.69
+    },
+    {
+      "name": "Lesath",
+      "index": 85435,
+      "appMag": 2.7
+    },
+    {
+      "name": "Pi  Pup",
+      "index": 35169,
+      "appMag": 2.71
+    },
+    {
+      "name": "Kaus Media",
+      "index": 89652,
+      "appMag": 2.72
+    },
+    {
+      "name": "Tarazed",
+      "index": 96969,
+      "appMag": 2.72
+    },
+    {
+      "name": "Yed Prior",
+      "index": 79351,
+      "appMag": 2.73
+    },
+    {
+      "name": "Athebyne",
+      "index": 80088,
+      "appMag": 2.73
+    },
+    {
+      "name": "The Car",
+      "index": 52268,
+      "appMag": 2.74
+    },
+    {
+      "name": "Porrima",
+      "index": 61747,
+      "appMag": 2.74
+    },
+    {
+      "name": "Hatysa",
+      "index": 26176,
+      "appMag": 2.75
+    },
+    {
+      "name": "Iot Cen",
+      "index": 64903,
+      "appMag": 2.75
+    },
+    {
+      "name": "Zubenelgenubi",
+      "index": 72395,
+      "appMag": 2.75
+    },
+    {
+      "name": "Cebalrai",
+      "index": 86474,
+      "appMag": 2.76
+    },
+    {
+      "name": "Cursa",
+      "index": 23820,
+      "appMag": 2.78
+    },
+    {
+      "name": "Kornephoros",
+      "index": 80570,
+      "appMag": 2.78
+    },
+    {
+      "name": "Rasalgethi",
+      "index": 84085,
+      "appMag": 2.78
+    },
+    {
+      "name": "Imai",
+      "index": 59564,
+      "appMag": 2.79
+    },
+    {
+      "name": "Rastaban",
+      "index": 85409,
+      "appMag": 2.79
+    },
+    {
+      "name": "Gam Lup",
+      "index": 76064,
+      "appMag": 2.8
+    },
+    {
+      "name": "Nihal",
+      "index": 25542,
+      "appMag": 2.81
+    },
+    {
+      "name": "40Zet Her",
+      "index": 81443,
+      "appMag": 2.81
+    },
+    {
+      "name": "Bet Hyi",
+      "index": 2016,
+      "appMag": 2.82
+    },
+    {
+      "name": "Paikauhale",
+      "index": 81019,
+      "appMag": 2.82
+    },
+    {
+      "name": "Kaus Borealis",
+      "index": 90216,
+      "appMag": 2.82
+    },
+    {
+      "name": "Algenib",
+      "index": 1065,
+      "appMag": 2.83
+    },
+    {
+      "name": "Tureis",
+      "index": 39644,
+      "appMag": 2.83
+    },
+    {
+      "name": "Bet TrA",
+      "index": 77715,
+      "appMag": 2.83
+    },
+    {
+      "name": "44Zet Per",
+      "index": 18201,
+      "appMag": 2.84
+    },
+    {
+      "name": "Bet Ara",
+      "index": 84998,
+      "appMag": 2.84
+    },
+    {
+      "name": "Alp Ara",
+      "index": 85529,
+      "appMag": 2.84
+    },
+    {
+      "name": "Alcyone",
+      "index": 17661,
+      "appMag": 2.85
+    },
+    {
+      "name": "Vindemiatrix",
+      "index": 63404,
+      "appMag": 2.85
+    },
+    {
+      "name": "Deneb Algedi",
+      "index": 107212,
+      "appMag": 2.85
+    },
+    {
+      "name": "Castor B",
+      "index": 118480,
+      "appMag": 2.85
+    },
+    {
+      "name": "Alp Hyi",
+      "index": 9217,
+      "appMag": 2.86
+    },
+    {
+      "name": "Fawaris",
+      "index": 96857,
+      "appMag": 2.86
+    },
+    {
+      "name": "Tejat",
+      "index": 30270,
+      "appMag": 2.87
+    },
+    {
+      "name": "Gam TrA",
+      "index": 74716,
+      "appMag": 2.87
+    },
+    {
+      "name": "Alp Tuc",
+      "index": 109783,
+      "appMag": 2.87
+    },
+    {
+      "name": "Acamar",
+      "index": 13813,
+      "appMag": 2.88
+    },
+    {
+      "name": "Albaldah",
+      "index": 93845,
+      "appMag": 2.88
+    },
+    {
+      "name": "Gomeisa",
+      "index": 36087,
+      "appMag": 2.89
+    },
+    {
+      "name": "Cor Caroli",
+      "index": 62924,
+      "appMag": 2.89
+    },
+    {
+      "name": "Fang",
+      "index": 78028,
+      "appMag": 2.89
+    },
+    {
+      "name": "45Eps Per",
+      "index": 18485,
+      "appMag": 2.9
+    },
+    {
+      "name": "Alniyat",
+      "index": 79869,
+      "appMag": 2.9
+    },
+    {
+      "name": "Sadalsuud",
+      "index": 105935,
+      "appMag": 2.9
+    },
+    {
+      "name": "23Gam Per",
+      "index": 14292,
+      "appMag": 2.91
+    },
+    {
+      "name": "Ups Car",
+      "index": 47866,
+      "appMag": 2.92
+    },
+    {
+      "name": "Matar",
+      "index": 111803,
+      "appMag": 2.93
+    },
+    {
+      "name": "Tau Pup",
+      "index": 32682,
+      "appMag": 2.94
+    },
+    {
+      "name": "Algorab",
+      "index": 60775,
+      "appMag": 2.94
+    },
+    {
+      "name": "Sadalmelik",
+      "index": 108727,
+      "appMag": 2.95
+    },
+    {
+      "name": "Zaurak",
+      "index": 18497,
+      "appMag": 2.97
+    },
+    {
+      "name": "Tianguan",
+      "index": 26386,
+      "appMag": 2.97
+    },
+    {
+      "name": "Ras Elased Australis",
+      "index": 47772,
+      "appMag": 2.97
+    },
+    {
+      "name": "Alnasl",
+      "index": 88360,
+      "appMag": 2.98
+    },
+    {
+      "name": "46Gam Hya",
+      "index": 64757,
+      "appMag": 2.99
+    },
+    {
+      "name": "Iot1Sco",
+      "index": 86803,
+      "appMag": 2.99
+    },
+    {
+      "name": "Okab",
+      "index": 93451,
+      "appMag": 2.99
+    },
+    {
+      "name": "4Bet Tri",
+      "index": 10041,
+      "appMag": 3.0
+    },
+    {
+      "name": "52Psi UMa",
+      "index": 54380,
+      "appMag": 3.0
+    },
+    {
+      "name": "Pherkad",
+      "index": 74867,
+      "appMag": 3.0
+    },
+    {
+      "name": "Xamidimura",
+      "index": 82262,
+      "appMag": 3.0
+    },
+    {
+      "name": "Aldhanab",
+      "index": 107741,
+      "appMag": 3.0
+    },
+    {
+      "name": "39Del Per",
+      "index": 17316,
+      "appMag": 3.01
+    },
+    {
+      "name": "Furud",
+      "index": 30049,
+      "appMag": 3.02
+    },
+    {
+      "name": "24Omi2CMa",
+      "index": 33888,
+      "appMag": 3.02
+    },
+    {
+      "name": "2Eps Crv",
+      "index": 59133,
+      "appMag": 3.02
+    },
+    {
+      "name": "Almaaz",
+      "index": 23361,
+      "appMag": 3.03
+    },
+    {
+      "name": "Bet Mus",
+      "index": 62126,
+      "appMag": 3.04
+    },
+    {
+      "name": "Seginus",
+      "index": 70850,
+      "appMag": 3.04
+    },
+    {
+      "name": "Albireo",
+      "index": 95647,
+      "appMag": 3.05
+    },
+    {
+      "name": "Dabih",
+      "index": 100019,
+      "appMag": 3.05
+    },
+    {
+      "name": "Mebsuta",
+      "index": 32161,
+      "appMag": 3.06
+    },
+    {
+      "name": "Tania Australis",
+      "index": 50655,
+      "appMag": 3.06
+    },
+    {
+      "name": "Altais",
+      "index": 94080,
+      "appMag": 3.07
+    },
+    {
+      "name": "Eta Sgr",
+      "index": 89363,
+      "appMag": 3.1
+    },
+    {
+      "name": "16Zet Hya",
+      "index": 43689,
+      "appMag": 3.11
+    },
+    {
+      "name": "Nu  Hya",
+      "index": 52789,
+      "appMag": 3.11
+    },
+    {
+      "name": "Lam Cen",
+      "index": 56391,
+      "appMag": 3.11
+    },
+    {
+      "name": "Alp Ind",
+      "index": 101444,
+      "appMag": 3.11
+    },
+    {
+      "name": "Wazn",
+      "index": 27559,
+      "appMag": 3.12
+    },
+    {
+      "name": "Talitha",
+      "index": 44000,
+      "appMag": 3.12
+    },
+    {
+      "name": "Zet Ara",
+      "index": 82825,
+      "appMag": 3.12
+    },
+    {
+      "name": "Sarin",
+      "index": 84120,
+      "appMag": 3.12
+    },
+    {
+      "name": "Kap Cen",
+      "index": 73106,
+      "appMag": 3.13
+    },
+    {
+      "name": "40Alp Lyn",
+      "index": 45728,
+      "appMag": 3.14
+    },
+    {
+      "name": "HIP 46701",
+      "index": 46568,
+      "appMag": 3.16
+    },
+    {
+      "name": "67Pi  Her",
+      "index": 84121,
+      "appMag": 3.16
+    },
+    {
+      "name": "Nu  Pup",
+      "index": 31605,
+      "appMag": 3.17
+    },
+    {
+      "name": "25The UMa",
+      "index": 46720,
+      "appMag": 3.17
+    },
+    {
+      "name": "Aldhibah",
+      "index": 83637,
+      "appMag": 3.17
+    },
+    {
+      "name": "27Phi Sgr",
+      "index": 91753,
+      "appMag": 3.17
+    },
+    {
+      "name": "Haedus",
+      "index": 23712,
+      "appMag": 3.18
+    },
+    {
+      "name": "Alp Cir",
+      "index": 71681,
+      "appMag": 3.18
+    },
+    {
+      "name": "Tabit",
+      "index": 22396,
+      "appMag": 3.19
+    },
+    {
+      "name": "2Eps Lep",
+      "index": 23630,
+      "appMag": 3.19
+    },
+    {
+      "name": "27Kap Oph",
+      "index": 82744,
+      "appMag": 3.19
+    },
+    {
+      "name": "Fuyue",
+      "index": 86990,
+      "appMag": 3.19
+    },
+    {
+      "name": "64Zet Cyg",
+      "index": 104393,
+      "appMag": 3.21
+    },
+    {
+      "name": "Errai",
+      "index": 116358,
+      "appMag": 3.21
+    },
+    {
+      "name": "Del Lup",
+      "index": 74911,
+      "appMag": 3.22
+    },
+    {
+      "name": "Yed Posterior",
+      "index": 79639,
+      "appMag": 3.23
+    },
+    {
+      "name": "58Eta Ser",
+      "index": 89683,
+      "appMag": 3.23
+    },
+    {
+      "name": "Alfirk",
+      "index": 105690,
+      "appMag": 3.23
+    },
+    {
+      "name": "Alp Pic",
+      "index": 32521,
+      "appMag": 3.24
+    },
+    {
+      "name": "65The Aql",
+      "index": 99155,
+      "appMag": 3.24
+    },
+    {
+      "name": "Sig Pup",
+      "index": 36274,
+      "appMag": 3.25
+    },
+    {
+      "name": "49Pi  Hya",
+      "index": 68674,
+      "appMag": 3.25
+    },
+    {
+      "name": "Brachium",
+      "index": 73485,
+      "appMag": 3.25
+    },
+    {
+      "name": "Sulafat",
+      "index": 92901,
+      "appMag": 3.25
+    },
+    {
+      "name": "Gam Hyi",
+      "index": 17637,
+      "appMag": 3.26
+    },
+    {
+      "name": "31Del And",
+      "index": 3086,
+      "appMag": 3.27
+    },
+    {
+      "name": "42The Oph",
+      "index": 84710,
+      "appMag": 3.27
+    },
+    {
+      "name": "Skat",
+      "index": 112775,
+      "appMag": 3.27
+    },
+    {
+      "name": "5Mu  Lep",
+      "index": 24249,
+      "appMag": 3.29
+    },
+    {
+      "name": "Ome Car",
+      "index": 49958,
+      "appMag": 3.29
+    },
+    {
+      "name": "Edasich",
+      "index": 75228,
+      "appMag": 3.29
+    },
+    {
+      "name": "Alp Dor",
+      "index": 21228,
+      "appMag": 3.3
+    },
+    {
+      "name": "HIP 51576",
+      "index": 51428,
+      "appMag": 3.3
+    },
+    {
+      "name": "Propus",
+      "index": 29582,
+      "appMag": 3.31
+    },
+    {
+      "name": "Gam Ara",
+      "index": 85007,
+      "appMag": 3.31
+    },
+    {
+      "name": "Bet Phe",
+      "index": 5154,
+      "appMag": 3.32
+    },
+    {
+      "name": "25Rho Per",
+      "index": 14318,
+      "appMag": 3.32
+    },
+    {
+      "name": "Megrez",
+      "index": 59591,
+      "appMag": 3.32
+    },
+    {
+      "name": "Eta Sco",
+      "index": 83884,
+      "appMag": 3.32
+    },
+    {
+      "name": "64Nu  Oph",
+      "index": 87774,
+      "appMag": 3.32
+    },
+    {
+      "name": "40Tau Sgr",
+      "index": 93568,
+      "appMag": 3.32
+    },
+    {
+      "name": "Alp Ret",
+      "index": 19730,
+      "appMag": 3.33
+    },
+    {
+      "name": "Chertan",
+      "index": 54717,
+      "appMag": 3.33
+    },
+    {
+      "name": "Azmidi",
+      "index": 38062,
+      "appMag": 3.34
+    },
+    {
+      "name": "Segin",
+      "index": 8867,
+      "appMag": 3.35
+    },
+    {
+      "name": "28Eta Ori",
+      "index": 25218,
+      "appMag": 3.35
+    },
+    {
+      "name": "Alzirr",
+      "index": 32276,
+      "appMag": 3.35
+    },
+    {
+      "name": "Muscida",
+      "index": 41586,
+      "appMag": 3.35
+    },
+    {
+      "name": "30Del Aql",
+      "index": 95206,
+      "appMag": 3.36
+    },
+    {
+      "name": "Eps Lup",
+      "index": 75034,
+      "appMag": 3.37
+    },
+    {
+      "name": "Ashlesha",
+      "index": 42990,
+      "appMag": 3.38
+    },
+    {
+      "name": "Heze",
+      "index": 66039,
+      "appMag": 3.38
+    },
+    {
+      "name": "Meissa",
+      "index": 26142,
+      "appMag": 3.39
+    },
+    {
+      "name": "HIP 50371",
+      "index": 50229,
+      "appMag": 3.39
+    },
+    {
+      "name": "Minelauva",
+      "index": 62889,
+      "appMag": 3.39
+    },
+    {
+      "name": "21Zet Cep",
+      "index": 109145,
+      "appMag": 3.39
+    },
+    {
+      "name": "Chamukuy",
+      "index": 20842,
+      "appMag": 3.4
+    },
+    {
+      "name": "Gam Phe",
+      "index": 6853,
+      "appMag": 3.41
+    },
+    {
+      "name": "35Lam Tau",
+      "index": 18677,
+      "appMag": 3.41
+    },
+    {
+      "name": "Nu  Cen",
+      "index": 67250,
+      "appMag": 3.41
+    },
+    {
+      "name": "Zet Lup",
+      "index": 74166,
+      "appMag": 3.41
+    },
+    {
+      "name": "3Eta Cep",
+      "index": 102090,
+      "appMag": 3.41
+    },
+    {
+      "name": "Homam",
+      "index": 111675,
+      "appMag": 3.41
+    },
+    {
+      "name": "Mothallah",
+      "index": 8777,
+      "appMag": 3.42
+    },
+    {
+      "name": "Eta Lup",
+      "index": 78147,
+      "appMag": 3.42
+    },
+    {
+      "name": "86Mu  Her",
+      "index": 86704,
+      "appMag": 3.42
+    },
+    {
+      "name": "Bet Pav",
+      "index": 102063,
+      "appMag": 3.42
+    },
+    {
+      "name": "HIP 45080",
+      "index": 44952,
+      "appMag": 3.43
+    },
+    {
+      "name": "Adhafera",
+      "index": 50193,
+      "appMag": 3.43
+    },
+    {
+      "name": "16Lam Aql",
+      "index": 93509,
+      "appMag": 3.43
+    },
+    {
+      "name": "Tania Borealis",
+      "index": 50230,
+      "appMag": 3.45
+    },
+    {
+      "name": "Achird",
+      "index": 3814,
+      "appMag": 3.46
+    },
+    {
+      "name": "31Eta Cet",
+      "index": 5353,
+      "appMag": 3.46
+    },
+    {
+      "name": "Chi Car",
+      "index": 38713,
+      "appMag": 3.46
+    },
+    {
+      "name": "49Del Boo",
+      "index": 74437,
+      "appMag": 3.46
+    },
+    {
+      "name": "Kaffaljidhma",
+      "index": 12673,
+      "appMag": 3.47
+    },
+    {
+      "name": "Mu  Cen",
+      "index": 67258,
+      "appMag": 3.47
+    },
+    {
+      "name": "30Eta Leo",
+      "index": 49441,
+      "appMag": 3.48
+    },
+    {
+      "name": "44Eta Her",
+      "index": 81582,
+      "appMag": 3.48
+    },
+    {
+      "name": "52Tau Cet",
+      "index": 8087,
+      "appMag": 3.49
+    },
+    {
+      "name": "Nganurganity",
+      "index": 33769,
+      "appMag": 3.49
+    },
+    {
+      "name": "Alula Borealis",
+      "index": 55054,
+      "appMag": 3.49
+    },
+    {
+      "name": "Nekkar",
+      "index": 73326,
+      "appMag": 3.49
+    },
+    {
+      "name": "Alp Tel",
+      "index": 90142,
+      "appMag": 3.49
+    },
+    {
+      "name": "Eps Gru",
+      "index": 112262,
+      "appMag": 3.49
+    },
+    {
+      "name": "13Kap CMa",
+      "index": 32672,
+      "appMag": 3.5
+    },
+    {
+      "name": "Wasat",
+      "index": 35453,
+      "appMag": 3.5
+    },
+    {
+      "name": "32Iot Cep",
+      "index": 112363,
+      "appMag": 3.5
+    },
+    {
+      "name": "12Gam Sge",
+      "index": 98025,
+      "appMag": 3.51
+    },
+    {
+      "name": "Sadalbari",
+      "index": 112388,
+      "appMag": 3.51
+    },
+    {
+      "name": "Rana",
+      "index": 17336,
+      "appMag": 3.52
+    },
+    {
+      "name": "Subra",
+      "index": 47373,
+      "appMag": 3.52
+    },
+    {
+      "name": "Phi Vel",
+      "index": 48635,
+      "appMag": 3.52
+    },
+    {
+      "name": "Sheliak",
+      "index": 92132,
+      "appMag": 3.52
+    },
+    {
+      "name": "37Xi 2Sgr",
+      "index": 92792,
+      "appMag": 3.52
+    },
+    {
+      "name": "Biham",
+      "index": 109080,
+      "appMag": 3.52
+    },
+    {
+      "name": "29Gam Vir",
+      "index": 118833,
+      "appMag": 3.52
+    },
+    {
+      "name": "Ain",
+      "index": 20837,
+      "appMag": 3.53
+    },
+    {
+      "name": "Tarf",
+      "index": 40411,
+      "appMag": 3.53
+    },
+    {
+      "name": "Xi  Hya",
+      "index": 56173,
+      "appMag": 3.54
+    },
+    {
+      "name": "32Mu  Ser",
+      "index": 77279,
+      "appMag": 3.54
+    },
+    {
+      "name": "55Xi  Ser",
+      "index": 85997,
+      "appMag": 3.54
+    },
+    {
+      "name": "41Ups4Eri",
+      "index": 19992,
+      "appMag": 3.55
+    },
+    {
+      "name": "14Zet Lep",
+      "index": 27220,
+      "appMag": 3.55
+    },
+    {
+      "name": "Iot Lup",
+      "index": 69772,
+      "appMag": 3.55
+    },
+    {
+      "name": "44Chi Dra",
+      "index": 89659,
+      "appMag": 3.55
+    },
+    {
+      "name": "Del Pav",
+      "index": 98923,
+      "appMag": 3.55
+    },
+    {
+      "name": "8Iot Cet",
+      "index": 1559,
+      "appMag": 3.56
+    },
+    {
+      "name": "Phi Eri",
+      "index": 10578,
+      "appMag": 3.56
+    },
+    {
+      "name": "12Del Crt",
+      "index": 55117,
+      "appMag": 3.56
+    },
+    {
+      "name": "Pipirima",
+      "index": 82293,
+      "appMag": 3.56
+    },
+    {
+      "name": "77Kap Gem",
+      "index": 37633,
+      "appMag": 3.57
+    },
+    {
+      "name": "Alkaphrah",
+      "index": 44343,
+      "appMag": 3.57
+    },
+    {
+      "name": "25Rho Boo",
+      "index": 70827,
+      "appMag": 3.57
+    },
+    {
+      "name": "Phi1Lup",
+      "index": 74947,
+      "appMag": 3.57
+    },
+    {
+      "name": "54Lam Gem",
+      "index": 35253,
+      "appMag": 3.58
+    },
+    {
+      "name": "Algedi",
+      "index": 99742,
+      "appMag": 3.58
+    },
+    {
+      "name": "Nembus",
+      "index": 7593,
+      "appMag": 3.59
+    },
+    {
+      "name": "20Tau Ori",
+      "index": 24614,
+      "appMag": 3.59
+    },
+    {
+      "name": "13Gam Lep",
+      "index": 27006,
+      "appMag": 3.59
+    },
+    {
+      "name": "Zavijava",
+      "index": 57583,
+      "appMag": 3.59
+    },
+    {
+      "name": "Ginan",
+      "index": 60074,
+      "appMag": 3.59
+    },
+    {
+      "name": "45The Cet",
+      "index": 6523,
+      "appMag": 3.6
+    },
+    {
+      "name": "34The Gem",
+      "index": 32932,
+      "appMag": 3.6
+    },
+    {
+      "name": "HIP 42536",
+      "index": 42416,
+      "appMag": 3.6
+    },
+    {
+      "name": "Psi Vel",
+      "index": 46518,
+      "appMag": 3.6
+    },
+    {
+      "name": "39Ups Lib",
+      "index": 76234,
+      "appMag": 3.6
+    },
+    {
+      "name": "Del Ara",
+      "index": 85466,
+      "appMag": 3.6
+    },
+    {
+      "name": "Bharani",
+      "index": 13176,
+      "appMag": 3.61
+    },
+    {
+      "name": "1Omi Tau",
+      "index": 15861,
+      "appMag": 3.61
+    },
+    {
+      "name": "41Lam Hya",
+      "index": 49700,
+      "appMag": 3.61
+    },
+    {
+      "name": "Del Mus",
+      "index": 63410,
+      "appMag": 3.61
+    },
+    {
+      "name": "Eta Pav",
+      "index": 86660,
+      "appMag": 3.61
+    },
+    {
+      "name": "Alpherg",
+      "index": 7083,
+      "appMag": 3.62
+    },
+    {
+      "name": "Atlas",
+      "index": 17805,
+      "appMag": 3.62
+    },
+    {
+      "name": "HIP 37819",
+      "index": 37711,
+      "appMag": 3.62
+    },
+    {
+      "name": "Zet2Sco",
+      "index": 82476,
+      "appMag": 3.62
+    },
+    {
+      "name": "1Omi And",
+      "index": 113365,
+      "appMag": 3.62
+    },
+    {
+      "name": "Lam Mus",
+      "index": 57189,
+      "appMag": 3.63
+    },
+    {
+      "name": "Rotanev",
+      "index": 101441,
+      "appMag": 3.64
+    },
+    {
+      "name": "Prima Hyadum",
+      "index": 20155,
+      "appMag": 3.65
+    },
+    {
+      "name": "23    UMa",
+      "index": 46600,
+      "appMag": 3.65
+    },
+    {
+      "name": "28Bet Ser",
+      "index": 76996,
+      "appMag": 3.65
+    },
+    {
+      "name": "The Ara",
+      "index": 88438,
+      "appMag": 3.65
+    },
+    {
+      "name": "55Zet1Aqr",
+      "index": 110613,
+      "appMag": 3.65
+    },
+    {
+      "name": "Nusakan",
+      "index": 75465,
+      "appMag": 3.66
+    },
+    {
+      "name": "40Tau Lib",
+      "index": 76364,
+      "appMag": 3.66
+    },
+    {
+      "name": "Thuban",
+      "index": 68536,
+      "appMag": 3.67
+    },
+    {
+      "name": "Bet Ind",
+      "index": 102894,
+      "appMag": 3.67
+    },
+    {
+      "name": "3Pi 4Ori",
+      "index": 22496,
+      "appMag": 3.68
+    },
+    {
+      "name": "Alp Pyx",
+      "index": 42709,
+      "appMag": 3.68
+    },
+    {
+      "name": "7Del Sge",
+      "index": 97055,
+      "appMag": 3.68
+    },
+    {
+      "name": "88    Aqr",
+      "index": 113977,
+      "appMag": 3.68
+    },
+    {
+      "name": "Fulu",
+      "index": 2914,
+      "appMag": 3.69
+    },
+    {
+      "name": "Chi Eri",
+      "index": 8989,
+      "appMag": 3.69
+    },
+    {
+      "name": "Saclateni",
+      "index": 23398,
+      "appMag": 3.69
+    },
+    {
+      "name": "HIP 47854",
+      "index": 47719,
+      "appMag": 3.69
+    },
+    {
+      "name": "Taiyangshou",
+      "index": 57225,
+      "appMag": 3.69
+    },
+    {
+      "name": "Nashira",
+      "index": 106641,
+      "appMag": 3.69
+    },
+    {
+      "name": "16Tau4Eri",
+      "index": 15436,
+      "appMag": 3.7
+    },
+    {
+      "name": "92Xi  Her",
+      "index": 87660,
+      "appMag": 3.7
+    },
+    {
+      "name": "6Gam Psc",
+      "index": 114606,
+      "appMag": 3.7
+    },
+    {
+      "name": "8Pi 5Ori",
+      "index": 22744,
+      "appMag": 3.71
+    },
+    {
+      "name": "16Eta Lep",
+      "index": 28032,
+      "appMag": 3.71
+    },
+    {
+      "name": "HIP 38414",
+      "index": 38304,
+      "appMag": 3.71
+    },
+    {
+      "name": "37Eps Ser",
+      "index": 77385,
+      "appMag": 3.71
+    },
+    {
+      "name": "72    Oph",
+      "index": 88493,
+      "appMag": 3.71
+    },
+    {
+      "name": "Alshain",
+      "index": 97724,
+      "appMag": 3.71
+    },
+    {
+      "name": "Ran",
+      "index": 16496,
+      "appMag": 3.72
+    },
+    {
+      "name": "Electra",
+      "index": 17457,
+      "appMag": 3.72
+    },
+    {
+      "name": "33Del Aur",
+      "index": 28287,
+      "appMag": 3.72
+    },
+    {
+      "name": "62Xi  Cyg",
+      "index": 103724,
+      "appMag": 3.72
+    },
+    {
+      "name": "2Xi  Tau",
+      "index": 16044,
+      "appMag": 3.73
+    },
+    {
+      "name": "109    Vir",
+      "index": 71993,
+      "appMag": 3.73
+    },
+    {
+      "name": "Grumium",
+      "index": 87313,
+      "appMag": 3.73
+    },
+    {
+      "name": "Nu  Oct",
+      "index": 106745,
+      "appMag": 3.73
+    },
+    {
+      "name": "73Lam Aqr",
+      "index": 112600,
+      "appMag": 3.73
+    },
+    {
+      "name": "Baten Kaitos",
+      "index": 8628,
+      "appMag": 3.74
+    },
+    {
+      "name": "20Gam Her",
+      "index": 79927,
+      "appMag": 3.74
+    },
+    {
+      "name": "65Tau Cyg",
+      "index": 104548,
+      "appMag": 3.74
+    },
+    {
+      "name": "HIP 44511",
+      "index": 44383,
+      "appMag": 3.75
+    },
+    {
+      "name": "62Gam Oph",
+      "index": 86838,
+      "appMag": 3.75
+    },
+    {
+      "name": "Bet Dor",
+      "index": 26004,
+      "appMag": 3.76
+    },
+    {
+      "name": "15Del Lep",
+      "index": 27585,
+      "appMag": 3.76
+    },
+    {
+      "name": "11Bet Mon",
+      "index": 30794,
+      "appMag": 3.76
+    },
+    {
+      "name": "39Omi Sgr",
+      "index": 93387,
+      "appMag": 3.76
+    },
+    {
+      "name": "10Iot2Cyg",
+      "index": 95553,
+      "appMag": 3.76
+    },
+    {
+      "name": "7Alp Lac",
+      "index": 110821,
+      "appMag": 3.76
+    },
+    {
+      "name": "Miram",
+      "index": 13234,
+      "appMag": 3.77
+    },
+    {
+      "name": "41Nu  Per",
+      "index": 17487,
+      "appMag": 3.77
+    },
+    {
+      "name": "Secunda Hyadum",
+      "index": 20405,
+      "appMag": 3.77
+    },
+    {
+      "name": "48Sig Ori",
+      "index": 26484,
+      "appMag": 3.77
+    },
+    {
+      "name": "Bet Vol",
+      "index": 41195,
+      "appMag": 3.77
+    },
+    {
+      "name": "HIP 42570",
+      "index": 42452,
+      "appMag": 3.77
+    },
+    {
+      "name": "Eta Ara",
+      "index": 82111,
+      "appMag": 3.77
+    },
+    {
+      "name": "Sualocin",
+      "index": 101628,
+      "appMag": 3.77
+    },
+    {
+      "name": "34Zet Cap",
+      "index": 105539,
+      "appMag": 3.77
+    },
+    {
+      "name": "24Iot Peg",
+      "index": 108829,
+      "appMag": 3.77
+    },
+    {
+      "name": "Gam2Vol",
+      "index": 34389,
+      "appMag": 3.78
+    },
+    {
+      "name": "60Iot Gem",
+      "index": 35946,
+      "appMag": 3.78
+    },
+    {
+      "name": "29Ups UMa",
+      "index": 48182,
+      "appMag": 3.78
+    },
+    {
+      "name": "HIP 53253",
+      "index": 53099,
+      "appMag": 3.78
+    },
+    {
+      "name": "30Zet Boo",
+      "index": 71568,
+      "appMag": 3.78
+    },
+    {
+      "name": "Albali",
+      "index": 102286,
+      "appMag": 3.78
+    },
+    {
+      "name": "Misam",
+      "index": 14632,
+      "appMag": 3.79
+    },
+    {
+      "name": "Praecipua",
+      "index": 53075,
+      "appMag": 3.79
+    },
+    {
+      "name": "Dalim",
+      "index": 14843,
+      "appMag": 3.8
+    },
+    {
+      "name": "HIP 37229",
+      "index": 37124,
+      "appMag": 3.8
+    },
+    {
+      "name": "13Del Ser",
+      "index": 76043,
+      "appMag": 3.8
+    },
+    {
+      "name": "1Kap Cyg",
+      "index": 94483,
+      "appMag": 3.8
+    },
+    {
+      "name": "31    Cyg",
+      "index": 99355,
+      "appMag": 3.8
+    },
+    {
+      "name": "Theemin",
+      "index": 21340,
+      "appMag": 3.81
+    },
+    {
+      "name": "HIP 51232",
+      "index": 51087,
+      "appMag": 3.81
+    },
+    {
+      "name": "8Gam CrB",
+      "index": 76715,
+      "appMag": 3.81
+    },
+    {
+      "name": "16Lam And",
+      "index": 116215,
+      "appMag": 3.81
+    },
+    {
+      "name": "Alrescha",
+      "index": 9467,
+      "appMag": 3.82
+    },
+    {
+      "name": "38    Lyn",
+      "index": 45557,
+      "appMag": 3.82
+    },
+    {
+      "name": "Giausar",
+      "index": 56043,
+      "appMag": 3.82
+    },
+    {
+      "name": "Marfik",
+      "index": 80636,
+      "appMag": 3.82
+    },
+    {
+      "name": "85Iot Her",
+      "index": 86147,
+      "appMag": 3.82
+    },
+    {
+      "name": "42Mu  Hya",
+      "index": 50924,
+      "appMag": 3.83
+    },
+    {
+      "name": "Phi Cen",
+      "index": 68026,
+      "appMag": 3.83
+    },
+    {
+      "name": "Alp Aps",
+      "index": 72143,
+      "appMag": 3.83
+    },
+    {
+      "name": "Bet Ret",
+      "index": 17398,
+      "appMag": 3.84
+    },
+    {
+      "name": "Atik",
+      "index": 17406,
+      "appMag": 3.84
+    },
+    {
+      "name": "77The1Tau",
+      "index": 20833,
+      "appMag": 3.84
+    },
+    {
+      "name": "HIP 43783",
+      "index": 43659,
+      "appMag": 3.84
+    },
+    {
+      "name": "47Rho Leo",
+      "index": 51475,
+      "appMag": 3.84
+    },
+    {
+      "name": "HIP 51986",
+      "index": 51837,
+      "appMag": 3.84
+    },
+    {
+      "name": "Gam Mus",
+      "index": 61007,
+      "appMag": 3.84
+    },
+    {
+      "name": "103Omi Her",
+      "index": 88516,
+      "appMag": 3.84
+    },
+    {
+      "name": "Polis",
+      "index": 89063,
+      "appMag": 3.84
+    },
+    {
+      "name": "63Eps Dra",
+      "index": 97123,
+      "appMag": 3.84
+    },
+    {
+      "name": "Alp Hor",
+      "index": 19697,
+      "appMag": 3.85
+    },
+    {
+      "name": "Bet Pic",
+      "index": 27253,
+      "appMag": 3.85
+    },
+    {
+      "name": "Del Col",
+      "index": 30204,
+      "appMag": 3.85
+    },
+    {
+      "name": "HIP 50191",
+      "index": 50050,
+      "appMag": 3.85
+    },
+    {
+      "name": "5Kap Dra",
+      "index": 61087,
+      "appMag": 3.85
+    },
+    {
+      "name": "Tau Cen",
+      "index": 61428,
+      "appMag": 3.85
+    },
+    {
+      "name": "41Gam Ser",
+      "index": 77835,
+      "appMag": 3.85
+    },
+    {
+      "name": "109    Her",
+      "index": 89859,
+      "appMag": 3.85
+    },
+    {
+      "name": "Alp Sct",
+      "index": 90834,
+      "appMag": 3.85
+    },
+    {
+      "name": "37Mu  And",
+      "index": 4426,
+      "appMag": 3.86
+    },
+    {
+      "name": "Sceptrum",
+      "index": 21541,
+      "appMag": 3.86
+    },
+    {
+      "name": "Eps Col",
+      "index": 25794,
+      "appMag": 3.86
+    },
+    {
+      "name": "Del TrA",
+      "index": 79422,
+      "appMag": 3.86
+    },
+    {
+      "name": "Gam Aps",
+      "index": 80818,
+      "appMag": 3.86
+    },
+    {
+      "name": "91The Her",
+      "index": 87536,
+      "appMag": 3.86
+    },
+    {
+      "name": "Sadachbia",
+      "index": 110048,
+      "appMag": 3.86
+    },
+    {
+      "name": "Maia",
+      "index": 17532,
+      "appMag": 3.87
+    },
+    {
+      "name": "HIP 43023",
+      "index": 42904,
+      "appMag": 3.87
+    },
+    {
+      "name": "Ups1Cen",
+      "index": 68063,
+      "appMag": 3.87
+    },
+    {
+      "name": "107Mu  Vir",
+      "index": 71730,
+      "appMag": 3.87
+    },
+    {
+      "name": "Iklil",
+      "index": 77867,
+      "appMag": 3.87
+    },
+    {
+      "name": "55Eta Aql",
+      "index": 97492,
+      "appMag": 3.87
+    },
+    {
+      "name": "Eps Phe",
+      "index": 763,
+      "appMag": 3.88
+    },
+    {
+      "name": "Mesarthim",
+      "index": 8813,
+      "appMag": 3.88
+    },
+    {
+      "name": "Rasalas",
+      "index": 48318,
+      "appMag": 3.88
+    },
+    {
+      "name": "Kap1Lup",
+      "index": 74147,
+      "appMag": 3.88
+    },
+    {
+      "name": "Iot Gru",
+      "index": 114056,
+      "appMag": 3.88
+    },
+    {
+      "name": "Azha",
+      "index": 13667,
+      "appMag": 3.89
+    },
+    {
+      "name": "16Omi1CMa",
+      "index": 33065,
+      "appMag": 3.89
+    },
+    {
+      "name": "22The Hya",
+      "index": 45204,
+      "appMag": 3.89
+    },
+    {
+      "name": "Zaniah",
+      "index": 59944,
+      "appMag": 3.89
+    },
+    {
+      "name": "21Eta Cyg",
+      "index": 97798,
+      "appMag": 3.89
+    },
+    {
+      "name": "Ukdah",
+      "index": 47297,
+      "appMag": 3.9
+    },
+    {
+      "name": "Pi  Cen",
+      "index": 55259,
+      "appMag": 3.9
+    },
+    {
+      "name": "HIP 65936",
+      "index": 65728,
+      "appMag": 3.9
+    },
+    {
+      "name": "38Nu  Tau",
+      "index": 18860,
+      "appMag": 3.91
+    },
+    {
+      "name": "HIP 41307",
+      "index": 41190,
+      "appMag": 3.91
+    },
+    {
+      "name": "Sig Cen",
+      "index": 60634,
+      "appMag": 3.91
+    },
+    {
+      "name": "Pi  Lup",
+      "index": 73578,
+      "appMag": 3.91
+    },
+    {
+      "name": "Zubenelhakrabi",
+      "index": 76099,
+      "appMag": 3.91
+    },
+    {
+      "name": "22Tau Her",
+      "index": 79749,
+      "appMag": 3.91
+    },
+    {
+      "name": "58Eps Her",
+      "index": 82951,
+      "appMag": 3.92
+    },
+    {
+      "name": "44Rho1Sgr",
+      "index": 94872,
+      "appMag": 3.92
+    },
+    {
+      "name": "Kitalpha",
+      "index": 104648,
+      "appMag": 3.92
+    },
+    {
+      "name": "Kap Phe",
+      "index": 2069,
+      "appMag": 3.93
+    },
+    {
+      "name": "Del Phe",
+      "index": 7068,
+      "appMag": 3.93
+    },
+    {
+      "name": "18Tau Per",
+      "index": 13497,
+      "appMag": 3.93
+    },
+    {
+      "name": "48Nu  Eri",
+      "index": 21391,
+      "appMag": 3.93
+    },
+    {
+      "name": "Zet Vol",
+      "index": 37397,
+      "appMag": 3.93
+    },
+    {
+      "name": "HIP 54463",
+      "index": 54304,
+      "appMag": 3.93
+    },
+    {
+      "name": "9Ome1Sco",
+      "index": 78692,
+      "appMag": 3.93
+    },
+    {
+      "name": "67    Oph",
+      "index": 87919,
+      "appMag": 3.93
+    },
+    {
+      "name": "Wurren",
+      "index": 5337,
+      "appMag": 3.94
+    },
+    {
+      "name": "26Alp Mon",
+      "index": 37340,
+      "appMag": 3.94
+    },
+    {
+      "name": "3    Pup",
+      "index": 37570,
+      "appMag": 3.94
+    },
+    {
+      "name": "Asellus Australis",
+      "index": 42792,
+      "appMag": 3.94
+    },
+    {
+      "name": "58Nu  Cyg",
+      "index": 103080,
+      "appMag": 3.94
+    },
+    {
+      "name": "50    Cas",
+      "index": 9577,
+      "appMag": 3.95
+    },
+    {
+      "name": "7Nu 2CMa",
+      "index": 31512,
+      "appMag": 3.95
+    },
+    {
+      "name": "79Zet UMa",
+      "index": 118882,
+      "appMag": 3.95
+    },
+    {
+      "name": "48    Per",
+      "index": 19296,
+      "appMag": 3.96
+    },
+    {
+      "name": "Eta Col",
+      "index": 28256,
+      "appMag": 3.96
+    },
+    {
+      "name": "HIP 44248",
+      "index": 44120,
+      "appMag": 3.96
+    },
+    {
+      "name": "HIP 45101",
+      "index": 44972,
+      "appMag": 3.96
+    },
+    {
+      "name": "Arkab Prior",
+      "index": 94945,
+      "appMag": 3.96
+    }
+  ]
+}

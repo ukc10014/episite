@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Von Neumann Probe — Star Field</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000; overflow: hidden;
+    color: #ccc; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+  }
+  canvas { display: block; }
+
+  /* --- Top-left HUD --- */
+  #hud {
+    position: absolute; top: 12px; left: 12px;
+    line-height: 1.7; pointer-events: none; z-index: 10;
+    text-shadow: 0 0 6px #000, 0 0 2px #000;
+  }
+  #hud .label { color: #555; }
+  #hud .val   { color: #ddd; }
+  #hud .bright { color: #fff; }
+
+  /* --- Bottom control panel --- */
+  #controls {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.80);
+    border-top: 1px solid #222;
+    padding: 10px 16px 12px;
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 8px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Row layouts */
+  .ctrl-row {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .ctrl-row.main { gap: 8px; }
+
+  /* Labels */
+  .ctrl-label {
+    color: #666; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.5px; min-width: 50px;
+  }
+
+  /* Selects and buttons */
+  select, button {
+    background: #111; color: #ccc; border: 1px solid #333;
+    padding: 4px 8px; border-radius: 3px; font-family: inherit;
+    font-size: 12px; cursor: pointer;
+  }
+  select:hover, button:hover { border-color: #555; color: #fff; }
+  button.active { background: #1a3a1a; border-color: #4a4; color: #6d6; }
+
+  /* Time slider */
+  #time-slider {
+    flex: 1; min-width: 200px; height: 4px;
+    -webkit-appearance: none; appearance: none;
+    background: #222; border-radius: 2px; outline: none;
+    cursor: pointer;
+  }
+  #time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #888; border: 2px solid #444; cursor: pointer;
+  }
+  #time-slider::-webkit-slider-thumb:hover { background: #aaa; }
+
+  /* FOV slider */
+  #fov-slider {
+    width: 80px; height: 3px;
+    -webkit-appearance: none; appearance: none;
+    background: #222; border-radius: 2px; outline: none;
+  }
+  #fov-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #777; cursor: pointer;
+  }
+
+  /* Info readout */
+  #readout {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    color: #888; font-size: 11px;
+  }
+  #readout .val { color: #bbb; }
+
+  /* Toggle buttons */
+  .toggle-group { display: flex; gap: 4px; }
+  .toggle-group button { font-size: 11px; padding: 3px 7px; }
+  .speed-btn.active { background: #1a2a3a; border-color: #4a8; color: #8cf; }
+  .toggle-overlay.active { background: #1a1a2e; border-color: #66a; color: #99c; }
+
+  /* 3D landmark labels (rendered by CSS2DRenderer) */
+  .landmark-label {
+    color: #667;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 10px;
+    padding: 1px 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 0 4px #000, 0 0 2px #000;
+  }
+  .landmark-label.major {
+    color: #889;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HUD overlay -->
+<div id="hud">
+  <div><span class="label">Stars:</span> <span class="val" id="hud-stars">loading...</span></div>
+  <div><span class="label">Probe:</span> <span class="val" id="hud-probe">—</span></div>
+  <div><span class="label">Nearest:</span> <span class="val" id="hud-nearest">—</span></div>
+  <div><span class="label">FPS:</span> <span class="val" id="hud-fps">—</span></div>
+</div>
+
+<!-- Bottom controls -->
+<div id="controls">
+  <!-- Row 1: probe select + transport -->
+  <div class="ctrl-row main">
+    <span class="ctrl-label">Probe</span>
+    <select id="probe-select"></select>
+
+    <button id="btn-play" title="Play / Pause">&#9654; Play</button>
+
+    <span class="ctrl-label" style="min-width:auto">Speed</span>
+    <div class="toggle-group" id="speed-group">
+      <button class="speed-btn" data-speed="100">100</button>
+      <button class="speed-btn" data-speed="1000">1k</button>
+      <button class="speed-btn active" data-speed="10000">10k</button>
+      <button class="speed-btn" data-speed="100000">100k</button>
+    </div>
+    <span class="ctrl-label" style="min-width:auto; color:#555">yr/s</span>
+
+    <span class="ctrl-label" style="min-width:auto; margin-left:8px">FOV</span>
+    <input type="range" id="fov-slider" min="20" max="120" value="60">
+    <span id="fov-val" style="color:#777; min-width:28px">60°</span>
+
+    <span style="flex:1"></span>
+
+    <span class="ctrl-label" style="min-width:auto">Relativistic</span>
+    <div class="toggle-group">
+      <button id="btn-aberration" class="toggle-rel" title="Aberration">Aberr</button>
+      <button id="btn-doppler" class="toggle-rel" title="Doppler shift">Dopp</button>
+      <button id="btn-searchlight" class="toggle-rel" title="Searchlight / beaming">Beam</button>
+    </div>
+
+    <span class="ctrl-label" style="min-width:auto; margin-left:8px">Overlays</span>
+    <div class="toggle-group">
+      <button id="btn-grid" class="toggle-overlay" title="Galactic plane grid">Grid</button>
+      <button id="btn-arms" class="toggle-overlay" title="Spiral arm centerlines">Arms</button>
+      <button id="btn-rings" class="toggle-overlay" title="Distance rings from Sol">Rings</button>
+      <button id="btn-trail" class="toggle-overlay" title="Probe trajectory trail">Trail</button>
+      <button id="btn-labels" class="toggle-overlay" title="Landmark labels">Labels</button>
+    </div>
+  </div>
+
+  <!-- Row 2: time slider -->
+  <div class="ctrl-row">
+    <span class="ctrl-label">Time</span>
+    <input type="range" id="time-slider" min="0" max="2000000" value="0" step="100">
+    <span id="time-val" style="color:#aaa; min-width: 140px">0 yr &middot; 0.0 ly</span>
+  </div>
+
+  <!-- Row 3: readout -->
+  <div id="readout">
+    <div><span class="label">Position:</span> <span class="val" id="rd-pos">0, 0, 0</span> <span class="label">ly</span></div>
+    <div><span class="label">Velocity:</span> <span class="val" id="rd-vel">—</span></div>
+    <div><span class="label">Distance from Sol:</span> <span class="val" id="rd-dist">0</span> <span class="label">ly</span></div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="renderer.js"></script>
+
+</body>
+</html>

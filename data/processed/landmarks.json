@@ -1,0 +1,169 @@
+{
+  "points": [
+    {
+      "name": "Sagittarius A* (Galactic Center)",
+      "x": 26000.0,
+      "y": 0.0,
+      "z": -20.0,
+      "description": "Supermassive black hole at the Milky Way center"
+    },
+    {
+      "name": "Large Magellanic Cloud",
+      "x": -1300.0,
+      "y": -33800.0,
+      "z": -49300.0,
+      "description": "Satellite galaxy, ~160,000 ly from Sol"
+    },
+    {
+      "name": "Small Magellanic Cloud",
+      "x": 12400.0,
+      "y": -36200.0,
+      "z": -44500.0,
+      "description": "Satellite galaxy, ~200,000 ly from Sol"
+    },
+    {
+      "name": "Orion Nebula (M42)",
+      "x": -980.0,
+      "y": -520.0,
+      "z": -380.0,
+      "description": "Nearby star-forming region, ~1,344 ly"
+    },
+    {
+      "name": "Crab Nebula (M1)",
+      "x": -3900.0,
+      "y": 2700.0,
+      "z": -1200.0,
+      "description": "Supernova remnant, ~6,500 ly"
+    },
+    {
+      "name": "Eagle Nebula (M16)",
+      "x": 5500.0,
+      "y": -1900.0,
+      "z": 80.0,
+      "description": "Star-forming region with Pillars of Creation, ~7,000 ly"
+    }
+  ],
+  "spiralArms": [
+    {
+      "name": "Perseus Arm",
+      "description": "Major spiral arm outside Sol's position",
+      "polyline": [
+        {
+          "x": 18000,
+          "y": 22000,
+          "z": 0
+        },
+        {
+          "x": 8000,
+          "y": 28000,
+          "z": 0
+        },
+        {
+          "x": -5000,
+          "y": 29000,
+          "z": 0
+        },
+        {
+          "x": -18000,
+          "y": 24000,
+          "z": 0
+        },
+        {
+          "x": -26000,
+          "y": 14000,
+          "z": 0
+        }
+      ]
+    },
+    {
+      "name": "Sagittarius Arm",
+      "description": "Major spiral arm between Sol and galactic center",
+      "polyline": [
+        {
+          "x": 22000,
+          "y": 10000,
+          "z": 0
+        },
+        {
+          "x": 16000,
+          "y": 18000,
+          "z": 0
+        },
+        {
+          "x": 6000,
+          "y": 22000,
+          "z": 0
+        },
+        {
+          "x": -6000,
+          "y": 20000,
+          "z": 0
+        },
+        {
+          "x": -16000,
+          "y": 12000,
+          "z": 0
+        }
+      ]
+    },
+    {
+      "name": "Orion-Cygnus Spur (Local Arm)",
+      "description": "Minor arm where our Sun resides",
+      "polyline": [
+        {
+          "x": 8000,
+          "y": 3000,
+          "z": 0
+        },
+        {
+          "x": 3000,
+          "y": 6000,
+          "z": 0
+        },
+        {
+          "x": -3000,
+          "y": 7000,
+          "z": 0
+        },
+        {
+          "x": -8000,
+          "y": 5000,
+          "z": 0
+        }
+      ]
+    },
+    {
+      "name": "Scutum-Centaurus Arm",
+      "description": "Major spiral arm inside Sol's orbit",
+      "polyline": [
+        {
+          "x": 26000,
+          "y": -4000,
+          "z": 0
+        },
+        {
+          "x": 24000,
+          "y": 8000,
+          "z": 0
+        },
+        {
+          "x": 18000,
+          "y": 16000,
+          "z": 0
+        },
+        {
+          "x": 8000,
+          "y": 20000,
+          "z": 0
+        }
+      ]
+    }
+  ],
+  "coordinateSystem": {
+    "origin": "Sol",
+    "units": "light-years",
+    "x": "toward galactic center",
+    "y": "direction of galactic rotation",
+    "z": "toward north galactic pole"
+  }
+}

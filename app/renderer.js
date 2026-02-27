@@ -25,6 +25,20 @@ const BLOOM_STRENGTH = 0.8;
 const BLOOM_RADIUS = 0.4;
 const BLOOM_THRESHOLD = 0.15;
 
+// Galactic model (shared between procedural generation and minimap)
+const GC_X = 26000;          // Galactic center offset from Sol along +x (ly)
+const GALAXY_R = 50000;       // Disk radius (ly)
+const DISK_SCALE_LENGTH = 10000; // Exponential disk scale length (ly)
+const DISK_SCALE_HEIGHT = 300;   // Thin disk scale height (ly)
+const BULGE_SCALE_R = 2000;     // Central bulge scale radius (ly)
+const SPIRAL_A = 2000;          // Log-spiral coefficient
+const SPIRAL_B = 0.22;          // Log-spiral growth rate
+const SPIRAL_STARTS = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2];
+const SPIRAL_ARM_WIDTH = 0.15;  // Arm angular half-width (radians)
+const SPIRAL_ARM_STRENGTH = 0.5; // Arm overdensity factor
+const PROCEDURAL_COUNT = 500000;
+const HYG_EXCLUSION_RADIUS = 500; // ly — don't place procedural stars near Sol
+
 // ---------------------------------------------------------------------------
 // Probe definitions
 // ---------------------------------------------------------------------------
@@ -301,6 +315,154 @@ let lastFpsTime = performance.now();
 let lastFrameTime = performance.now();
 
 // ---------------------------------------------------------------------------
+// Procedural star generation
+// ---------------------------------------------------------------------------
+
+// Mulberry32 PRNG — fast, deterministic, 32-bit state
+function mulberry32(seed) {
+  let s = seed | 0;
+  return function() {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// B-V color index → [r, g, b] in [0,1] (Tanner Helland / Ballesteros)
+function bvToRgb(bv) {
+  bv = Math.max(-0.4, Math.min(2.0, bv));
+  const temp = 4600.0 * (1.0 / (0.92 * bv + 1.7) + 1.0 / (0.92 * bv + 0.62));
+  const t = Math.max(1000.0, Math.min(40000.0, temp));
+  const x = t / 100.0;
+
+  let r, g, b;
+  if (x <= 66.0) r = 255.0;
+  else r = 329.698727446 * Math.pow(x - 60.0, -0.1332047592);
+
+  if (x <= 66.0) g = 99.4708025861 * Math.log(x) - 161.1195681661;
+  else g = 288.1221695283 * Math.pow(x - 60.0, -0.0755148492);
+
+  if (x >= 66.0) b = 255.0;
+  else if (x <= 19.0) b = 0.0;
+  else b = 138.5177312231 * Math.log(x - 10.0) - 305.0447927307;
+
+  return [
+    Math.max(0, Math.min(255, r)) / 255,
+    Math.max(0, Math.min(255, g)) / 255,
+    Math.max(0, Math.min(255, b)) / 255,
+  ];
+}
+
+// Galactic density at world-space point (Sol at origin, GC at +x = 26000)
+function galacticDensity(x, y, z) {
+  // Convert to galactocentric coordinates
+  const gx = x - GC_X;
+  const gy = y;
+  const gz = z;
+  const R = Math.sqrt(gx * gx + gy * gy); // cylindrical radius from GC
+
+  // Exponential disk
+  let disk = Math.exp(-R / DISK_SCALE_LENGTH) * Math.exp(-Math.abs(gz) / DISK_SCALE_HEIGHT);
+
+  // Spiral arm modulation
+  if (R > 200) {
+    const theta = Math.atan2(gy, gx); // angle in galactic plane
+    // For each arm, find angular distance
+    let armFactor = 1.0;
+    for (const startAngle of SPIRAL_STARTS) {
+      // Invert log-spiral: at radius R, the arm is at angle = ln(R/a)/b + startAngle
+      const armTheta = Math.log(R / SPIRAL_A) / SPIRAL_B + startAngle;
+      // Angular difference (wrapped to [-pi, pi])
+      let dTheta = theta - armTheta;
+      dTheta = dTheta - Math.round(dTheta / (2 * Math.PI)) * 2 * Math.PI;
+      // Gaussian overdensity
+      armFactor += SPIRAL_ARM_STRENGTH * Math.exp(-0.5 * (dTheta / SPIRAL_ARM_WIDTH) * (dTheta / SPIRAL_ARM_WIDTH));
+    }
+    disk *= armFactor;
+  }
+
+  // Central bulge — oblate ellipsoid (flattened 2:1 in z)
+  const bulgeR = Math.sqrt(R * R + 4 * gz * gz); // stretch z by 2× so bulge is squashed
+  const bulge = 2.0 * Math.exp(-bulgeR / BULGE_SCALE_R);
+
+  return disk + bulge;
+}
+
+// Sample absolute magnitude with bias toward luminous stars
+function sampleAbsMag(rand) {
+  const r = rand();
+  if (r < 0.02) return -7 + rand() * 3;        // supergiants: -7 to -4
+  if (r < 0.10) return -4 + rand() * 3;         // bright giants: -4 to -1
+  if (r < 0.30) return -1 + rand() * 3;         // giants/bright MS: -1 to +2
+  if (r < 0.65) return 2 + rand() * 3;          // sun-like: +2 to +5
+  return 5 + rand() * 3;                         // K-type MS: +5 to +8
+}
+
+// Approximate B-V from absolute magnitude (main-sequence relation + scatter)
+function absMagToBV(absMag, rand) {
+  const bv = -0.3 + (absMag + 7) * 0.1 + (rand() - 0.5) * 0.2;
+  return Math.max(-0.4, Math.min(2.0, bv));
+}
+
+function generateProceduralStars(count, seed) {
+  const t0 = performance.now();
+  const rand = mulberry32(seed);
+
+  // Pre-compute max density for rejection sampling (near galactic center)
+  const maxDensity = galacticDensity(GC_X, 0, 0);
+
+  const data = new Float32Array(count * 7);
+  let accepted = 0;
+  let sampled = 0;
+  const cylR = GALAXY_R;
+  const cylZ = 3000; // half-height of sampling cylinder
+
+  while (accepted < count) {
+    sampled++;
+    // Random point in cylinder centered on galactic center
+    // Use galactocentric coords, then convert to world (Sol-centered)
+    const gr = cylR * Math.sqrt(rand()); // uniform in disk area
+    const gtheta = rand() * 2 * Math.PI;
+    const gx = gr * Math.cos(gtheta);
+    const gy = gr * Math.sin(gtheta);
+    const gz = (rand() * 2 - 1) * cylZ;
+
+    // World coords (Sol at origin)
+    const wx = gx + GC_X;
+    const wy = gy;
+    const wz = gz;
+
+    // HYG exclusion zone
+    const distSol = Math.sqrt(wx * wx + wy * wy + wz * wz);
+    if (distSol < HYG_EXCLUSION_RADIUS) continue;
+
+    // Rejection sampling
+    const density = galacticDensity(wx, wy, wz);
+    if (rand() > density / maxDensity) continue;
+
+    // Accepted — generate star properties
+    const absMag = sampleAbsMag(rand);
+    const bv = absMagToBV(absMag, rand);
+    const rgb = bvToRgb(bv);
+
+    const base = accepted * 7;
+    data[base]     = wx;
+    data[base + 1] = wy;
+    data[base + 2] = wz;
+    data[base + 3] = absMag;
+    data[base + 4] = rgb[0];
+    data[base + 5] = rgb[1];
+    data[base + 6] = rgb[2];
+    accepted++;
+  }
+
+  const elapsed = (performance.now() - t0).toFixed(0);
+  console.log(`[VNP] Generated ${count.toLocaleString()} procedural stars in ${elapsed}ms (${sampled.toLocaleString()} candidates sampled)`);
+  return data;
+}
+
+// ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
 
@@ -317,16 +479,21 @@ async function init() {
   metadata = await metaResponse.json();
   landmarks = await landmarksResponse.json();
 
-  const starCount = metadata.starCount;
+  const hygCount = metadata.starCount;
   const floatData = new Float32Array(binBuffer);
-  console.log(`[VNP] Loaded ${starCount.toLocaleString()} stars`);
+  console.log(`[VNP] Loaded ${hygCount.toLocaleString()} HYG stars`);
 
-  // Extract attributes
-  const positions = new Float32Array(starCount * 3);
-  const absMags = new Float32Array(starCount);
-  const colors = new Float32Array(starCount * 3);
+  // Generate procedural stars
+  const procData = generateProceduralStars(PROCEDURAL_COUNT, 42);
+  const totalCount = hygCount + PROCEDURAL_COUNT;
 
-  for (let i = 0; i < starCount; i++) {
+  // Allocate combined arrays
+  const positions = new Float32Array(totalCount * 3);
+  const absMags = new Float32Array(totalCount);
+  const colors = new Float32Array(totalCount * 3);
+
+  // Copy HYG stars
+  for (let i = 0; i < hygCount; i++) {
     const base = i * 7;
     positions[i * 3]     = floatData[base];
     positions[i * 3 + 1] = floatData[base + 1];
@@ -336,6 +503,21 @@ async function init() {
     colors[i * 3 + 1]    = floatData[base + 5];
     colors[i * 3 + 2]    = floatData[base + 6];
   }
+
+  // Append procedural stars
+  for (let i = 0; i < PROCEDURAL_COUNT; i++) {
+    const src = i * 7;
+    const dst = hygCount + i;
+    positions[dst * 3]     = procData[src];
+    positions[dst * 3 + 1] = procData[src + 1];
+    positions[dst * 3 + 2] = procData[src + 2];
+    absMags[dst]           = procData[src + 3];
+    colors[dst * 3]        = procData[src + 4];
+    colors[dst * 3 + 1]    = procData[src + 5];
+    colors[dst * 3 + 2]    = procData[src + 6];
+  }
+
+  console.log(`[VNP] Total: ${totalCount.toLocaleString()} stars (${hygCount.toLocaleString()} HYG + ${PROCEDURAL_COUNT.toLocaleString()} procedural)`);
 
   // Cache named star positions
   for (const ns of metadata.namedStars.slice(0, 200)) {
@@ -351,6 +533,7 @@ async function init() {
   scene.background = new THREE.Color(0x000000);
 
   camera = new THREE.PerspectiveCamera(sim.fov, window.innerWidth / window.innerHeight, 0.001, 500000);
+  camera.up.set(0, 0, 1); // Galactic north (+z) is "up" so disk band appears horizontal
 
   webglRenderer = new THREE.WebGLRenderer({ antialias: false });
   webglRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -424,7 +607,8 @@ async function init() {
 
   window.addEventListener('resize', onResize);
   console.log('[VNP] Renderer initialized');
-  document.getElementById('hud-stars').textContent = starCount.toLocaleString();
+  document.getElementById('hud-stars').textContent =
+    `${hygCount.toLocaleString()} + ${PROCEDURAL_COUNT.toLocaleString()}`;
 
   lastFrameTime = performance.now();
   animate();
@@ -598,17 +782,9 @@ function syncOverlayVisibility() {
 // Mini-map drawing
 // ---------------------------------------------------------------------------
 
-// Galaxy geometry (in world coords: Sol at origin, +x toward galactic center)
-const GC_X = 26000;     // Galactic center is ~26k ly from Sol along +x
-const GALAXY_R = 50000;  // Milky Way disk radius ~50k ly
-const GALAXY_THICK = 2000; // Disk thickness ~2k ly
-const MAP_RANGE = 70000; // Canvas shows ±70k ly from galactic center
-
-// Logarithmic spiral arms (4 arms, from galactic center)
-// r = a * e^(b*theta), with different starting angles
-const SPIRAL_A = 2000;
-const SPIRAL_B = 0.22;
-const SPIRAL_STARTS = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2];
+// Mini-map layout (galaxy constants defined at top of file)
+const GALAXY_THICK = 2000; // Disk thickness for edge-on view (ly)
+const MAP_RANGE = 70000;   // Canvas shows ±70k ly from galactic center
 
 function drawSpiralArm(ctx, gcCanvasX, gcCanvasY, scale, startAngle) {
   ctx.beginPath();

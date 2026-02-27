@@ -39,6 +39,12 @@ const SPIRAL_ARM_STRENGTH = 0.5; // Arm overdensity factor
 const PROCEDURAL_COUNT = 500000;
 const HYG_EXCLUSION_RADIUS = 500; // ly — don't place procedural stars near Sol
 
+// Solar sail
+const SAIL_DISTANCE = 1000;      // meters ahead of probe
+const SAIL_SIZE = 2000;           // meters (2km wide diamond)
+const SAIL_DEGRADE_TIME = 1000;   // years until mostly destroyed
+const SAIL_BOOM_WIDTH = 0.008;    // fraction of half-span for boom/frame thickness
+
 // Nebula gas clouds
 const NEBULA_COUNT = 4000;
 const NEBULA_SCALE_HEIGHT = 150;    // ly — gas is thinner than stellar disk
@@ -119,6 +125,7 @@ const sim = {
   doppler: false,
   searchlight: false,
   // Overlay toggles
+  showSail: true,     // solar sail ahead of probe
   showClouds: true,   // on by default — core to Milky Way look
   showGrid: false,
   showArms: false,
@@ -313,6 +320,9 @@ let starMaterial;
 let metadata;
 let landmarks;
 let namedStarPositions = []; // {name, pos: Vector3}
+
+// Solar sail (separate near-field scene)
+let sailScene, sailCamera, sailMesh, sailMaterial;
 
 // Overlay groups
 let gridGroup, armsGroup, ringsGroup, trailGroup, labelsGroup, nebulaGroup;
@@ -581,6 +591,113 @@ const nebulaFragmentShader = /* glsl */ `
 `;
 
 // ---------------------------------------------------------------------------
+// Solar sail shaders
+// ---------------------------------------------------------------------------
+
+const sailVertexShader = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    vViewDir = normalize(-mvPos.xyz);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const sailFragmentShader = /* glsl */ `
+  uniform float uDamage;  // 0 = pristine, 1+ = mostly destroyed
+
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+
+  // Hash-based noise
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 6; i++) {
+      v += a * noise(p);
+      p *= 2.0;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  void main() {
+    // Diamond shape: discard outside |u-0.5| + |v-0.5| > 0.5
+    vec2 d = abs(vUv - 0.5);
+    float diamond = d.x + d.y;
+    if (diamond > 0.5) discard;
+
+    // Structural booms: along diamond edges and diagonals
+    float boomWidth = ${SAIL_BOOM_WIDTH.toFixed(4)};
+    float edgeDist = abs(diamond - 0.5);                 // distance to diamond edge
+    float diagH = abs(vUv.x - 0.5);                      // distance to vertical boom
+    float diagV = abs(vUv.y - 0.5);                      // distance to horizontal boom
+    bool onFrame = edgeDist < boomWidth || diagH < boomWidth * 0.6 || diagV < boomWidth * 0.6;
+
+    // Damage holes (only in fabric, not frame)
+    if (!onFrame && uDamage > 0.0) {
+      float n = fbm(vUv * 80.0);               // fine-grained noise
+      float n2 = fbm(vUv * 30.0 + 5.0);        // medium-scale variation
+      float holeMask = n * 0.6 + n2 * 0.4;
+      // Threshold decreases as damage increases
+      float threshold = 1.0 - uDamage * 0.95;
+      if (holeMask > threshold) discard;
+    }
+
+    // Gold color with view-angle-dependent sheen
+    vec3 gold = vec3(0.85, 0.65, 0.12);
+    vec3 brightGold = vec3(1.0, 0.85, 0.3);
+
+    float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
+    fresnel = fresnel * fresnel;
+
+    vec3 color = mix(gold, brightGold, fresnel * 0.5);
+
+    // Frame is slightly darker, more structural
+    if (onFrame) {
+      color = vec3(0.35, 0.30, 0.20);
+    }
+
+    // Subtle variation across the fabric
+    float fabric = noise(vUv * 200.0) * 0.1 + 0.9;
+    if (!onFrame) color *= fabric;
+
+    // Slight transparency at edges of remaining fabric near holes
+    float alpha = 1.0;
+    if (!onFrame && uDamage > 0.0) {
+      float n = fbm(vUv * 80.0);
+      float n2 = fbm(vUv * 30.0 + 5.0);
+      float holeMask = n * 0.6 + n2 * 0.4;
+      float threshold = 1.0 - uDamage * 0.95;
+      float edgeFade = smoothstep(threshold - 0.05, threshold, holeMask);
+      alpha = 1.0 - edgeFade * 0.4;
+    }
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+// ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
 
@@ -748,6 +865,31 @@ async function init() {
     BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESHOLD,
   ));
   composer.addPass(new OutputPass());
+
+  // --- Solar sail (near-field scene) ---
+  sailScene = new THREE.Scene();
+  sailCamera = new THREE.PerspectiveCamera(sim.fov, window.innerWidth / window.innerHeight, 1, 10000);
+
+  // Diamond sail: a flat plane, diamond shape carved in shader
+  const sailGeo = new THREE.PlaneGeometry(SAIL_SIZE, SAIL_SIZE);
+  sailMaterial = new THREE.ShaderMaterial({
+    vertexShader: sailVertexShader,
+    fragmentShader: sailFragmentShader,
+    uniforms: {
+      uDamage: { value: 0.0 },
+    },
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: true,
+  });
+  sailMesh = new THREE.Mesh(sailGeo, sailMaterial);
+  sailScene.add(sailMesh);
+
+  // Faint ambient + directional light for the sail
+  sailScene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const sunLight = new THREE.DirectionalLight(0xffffee, 1.5);
+  sunLight.position.set(0, 0, 1); // light from behind (from Sol direction)
+  sailScene.add(sunLight);
 
   // --- OrbitControls (look around from probe position) ---
   controls = new OrbitControls(camera, webglRenderer.domElement);
@@ -1179,6 +1321,31 @@ function animate() {
   drawMiniMap();
   controls.update();
   composer.render();
+
+  // Render solar sail on top (near-field, separate scene)
+  if (sim.showSail) {
+    // Position sail along probe velocity direction, 1km ahead
+    sailMesh.position.copy(probeVelDir).multiplyScalar(SAIL_DISTANCE);
+    // Sail faces back toward camera (probe)
+    sailMesh.lookAt(0, 0, 0);
+    // Rotate 45° to make it a diamond orientation
+    sailMesh.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 4);
+
+    // Sync sail camera with main camera orientation
+    sailCamera.quaternion.copy(camera.quaternion);
+    sailCamera.fov = camera.fov;
+    sailCamera.aspect = camera.aspect;
+    sailCamera.updateProjectionMatrix();
+
+    // Damage accumulation
+    sailMaterial.uniforms.uDamage.value = Math.max(0, sim.time / SAIL_DEGRADE_TIME);
+
+    webglRenderer.autoClear = false;
+    webglRenderer.clearDepth();
+    webglRenderer.render(sailScene, sailCamera);
+    webglRenderer.autoClear = true;
+  }
+
   cssRenderer.render(scene, camera);
 
   // HUD (throttled to ~2Hz)
@@ -1329,6 +1496,7 @@ function setupUI() {
 
   // Overlay toggles
   const overlayToggles = [
+    ['btn-sail', 'showSail'],
     ['btn-clouds', 'showClouds'],
     ['btn-grid', 'showGrid'],
     ['btn-arms', 'showArms'],
@@ -1355,6 +1523,8 @@ function onResize() {
   const h = window.innerHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  sailCamera.aspect = w / h;
+  sailCamera.updateProjectionMatrix();
   webglRenderer.setSize(w, h);
   composer.setSize(w, h);
   cssRenderer.setSize(w, h);

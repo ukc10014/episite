@@ -39,6 +39,14 @@ const SPIRAL_ARM_STRENGTH = 0.5; // Arm overdensity factor
 const PROCEDURAL_COUNT = 500000;
 const HYG_EXCLUSION_RADIUS = 500; // ly — don't place procedural stars near Sol
 
+// Nebula gas clouds
+const NEBULA_COUNT = 4000;
+const NEBULA_SCALE_HEIGHT = 150;    // ly — gas is thinner than stellar disk
+const NEBULA_BASE_SIZE = 200000.0;  // world-space — must be huge so blobs overlap into smooth band
+const NEBULA_MIN_SIZE = 8.0;        // px — keep distant clouds visible
+const NEBULA_MAX_SIZE = 512.0;      // px
+const NEBULA_EXCLUSION_RADIUS = 50; // ly from Sol — Milky Way is visible from Earth
+
 // ---------------------------------------------------------------------------
 // Probe definitions
 // ---------------------------------------------------------------------------
@@ -110,7 +118,8 @@ const sim = {
   aberration: false,
   doppler: false,
   searchlight: false,
-  // Overlay toggles (all off by default)
+  // Overlay toggles
+  showClouds: true,   // on by default — core to Milky Way look
   showGrid: false,
   showArms: false,
   showRings: false,
@@ -306,7 +315,7 @@ let landmarks;
 let namedStarPositions = []; // {name, pos: Vector3}
 
 // Overlay groups
-let gridGroup, armsGroup, ringsGroup, trailGroup, labelsGroup;
+let gridGroup, armsGroup, ringsGroup, trailGroup, labelsGroup, nebulaGroup;
 let trailLine; // the actual Line object inside trailGroup
 let trailPositions; // Float32Array backing the trail geometry
 
@@ -463,6 +472,115 @@ function generateProceduralStars(count, seed) {
 }
 
 // ---------------------------------------------------------------------------
+// Nebula cloud generation
+// ---------------------------------------------------------------------------
+
+function generateNebulaClouds(count, seed) {
+  const t0 = performance.now();
+  const rand = mulberry32(seed);
+
+  const maxDensity = galacticDensity(GC_X, 0, 0);
+
+  // 8 floats per cloud: x, y, z, size, r, g, b, opacity
+  const data = new Float32Array(count * 8);
+  let accepted = 0;
+  const cylR = GALAXY_R;
+  const cylZ = NEBULA_SCALE_HEIGHT * 10; // sampling half-height
+
+  while (accepted < count) {
+    const gr = cylR * Math.sqrt(rand());
+    const gtheta = rand() * 2 * Math.PI;
+    const gx = gr * Math.cos(gtheta);
+    const gy = gr * Math.sin(gtheta);
+    const gz = (rand() * 2 - 1) * cylZ;
+
+    // World coords (Sol at origin)
+    const wx = gx + GC_X;
+    const wy = gy;
+    const wz = gz;
+
+    // Skip near Sol
+    const distSol = Math.sqrt(wx * wx + wy * wy + wz * wz);
+    if (distSol < NEBULA_EXCLUSION_RADIUS) continue;
+
+    // Skip bulge region (no diffuse gas clouds near GC)
+    const R_gc = Math.sqrt(gx * gx + gy * gy);
+    if (R_gc < 3000) continue;
+
+    // Use tighter z scale height for gas
+    const density = galacticDensity(wx, wy, wz) *
+      Math.exp(-Math.abs(wz) / NEBULA_SCALE_HEIGHT) /
+      Math.exp(-Math.abs(wz) / DISK_SCALE_HEIGHT);
+    if (rand() > density / maxDensity) continue;
+
+    // Color palette: 60% blue-white, 25% warm white, 15% pink
+    const colorRoll = rand();
+    let r, g, b;
+    if (colorRoll < 0.60) {
+      r = 0.5; g = 0.6; b = 1.0;
+    } else if (colorRoll < 0.85) {
+      r = 0.8; g = 0.75; b = 0.7;
+    } else {
+      r = 1.0; g = 0.4; b = 0.5;
+    }
+
+    const size = NEBULA_BASE_SIZE * (0.5 + rand() * 1.5);
+    const opacity = 0.03 + rand() * 0.06;
+
+    const base = accepted * 8;
+    data[base]     = wx;
+    data[base + 1] = wy;
+    data[base + 2] = wz;
+    data[base + 3] = size;
+    data[base + 4] = r;
+    data[base + 5] = g;
+    data[base + 6] = b;
+    data[base + 7] = opacity;
+    accepted++;
+  }
+
+  const elapsed = (performance.now() - t0).toFixed(0);
+  console.log(`[VNP] Generated ${count} nebula clouds in ${elapsed}ms`);
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Nebula shaders
+// ---------------------------------------------------------------------------
+
+const nebulaVertexShader = /* glsl */ `
+  uniform float uPixelRatio;
+  uniform float uMinSize;
+  uniform float uMaxSize;
+  attribute float aSize;
+  attribute vec3  aColor;
+  attribute float aOpacity;
+  varying vec3  vColor;
+  varying float vOpacity;
+  void main() {
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    float dist = length(mvPos.xyz);
+    float size = aSize * uPixelRatio / max(dist, 1.0);
+    gl_PointSize = clamp(size, uMinSize, uMaxSize);
+    vColor = aColor;
+    vOpacity = aOpacity * smoothstep(uMaxSize, uMinSize, size);
+    gl_Position = projectionMatrix * mvPos;
+  }
+`;
+
+const nebulaFragmentShader = /* glsl */ `
+  varying vec3  vColor;
+  varying float vOpacity;
+  void main() {
+    vec2 c = gl_PointCoord - 0.5;
+    float r = length(c) * 2.0;
+    float alpha = exp(-r * r * 1.5);  // soft Gaussian
+    float intensity = alpha * vOpacity;
+    gl_FragColor = vec4(vColor * intensity, intensity);
+  }
+`;
+
+// ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
 
@@ -568,6 +686,48 @@ async function init() {
   });
 
   scene.add(new THREE.Points(geometry, starMaterial));
+
+  // --- Nebula clouds ---
+  const nebulaData = generateNebulaClouds(NEBULA_COUNT, 123);
+  const nebulaPositions = new Float32Array(NEBULA_COUNT * 3);
+  const nebulaSizes = new Float32Array(NEBULA_COUNT);
+  const nebulaColors = new Float32Array(NEBULA_COUNT * 3);
+  const nebulaOpacities = new Float32Array(NEBULA_COUNT);
+
+  for (let i = 0; i < NEBULA_COUNT; i++) {
+    const src = i * 8;
+    nebulaPositions[i * 3]     = nebulaData[src];
+    nebulaPositions[i * 3 + 1] = nebulaData[src + 1];
+    nebulaPositions[i * 3 + 2] = nebulaData[src + 2];
+    nebulaSizes[i]             = nebulaData[src + 3];
+    nebulaColors[i * 3]        = nebulaData[src + 4];
+    nebulaColors[i * 3 + 1]    = nebulaData[src + 5];
+    nebulaColors[i * 3 + 2]    = nebulaData[src + 6];
+    nebulaOpacities[i]         = nebulaData[src + 7];
+  }
+
+  const nebulaGeo = new THREE.BufferGeometry();
+  nebulaGeo.setAttribute('position', new THREE.BufferAttribute(nebulaPositions, 3));
+  nebulaGeo.setAttribute('aSize', new THREE.BufferAttribute(nebulaSizes, 1));
+  nebulaGeo.setAttribute('aColor', new THREE.BufferAttribute(nebulaColors, 3));
+  nebulaGeo.setAttribute('aOpacity', new THREE.BufferAttribute(nebulaOpacities, 1));
+
+  const nebulaMaterial = new THREE.ShaderMaterial({
+    vertexShader: nebulaVertexShader,
+    fragmentShader: nebulaFragmentShader,
+    uniforms: {
+      uPixelRatio: { value: webglRenderer.getPixelRatio() },
+      uMinSize:    { value: NEBULA_MIN_SIZE },
+      uMaxSize:    { value: NEBULA_MAX_SIZE },
+    },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  nebulaGroup = new THREE.Group();
+  nebulaGroup.add(new THREE.Points(nebulaGeo, nebulaMaterial));
+  scene.add(nebulaGroup);
 
   // --- Bloom ---
   composer = new EffectComposer(webglRenderer);
@@ -768,6 +928,7 @@ function updateTrail() {
 }
 
 function syncOverlayVisibility() {
+  nebulaGroup.visible = sim.showClouds;
   gridGroup.visible = sim.showGrid;
   armsGroup.visible = sim.showArms;
   ringsGroup.visible = sim.showRings;
@@ -1157,6 +1318,7 @@ function setupUI() {
 
   // Overlay toggles
   const overlayToggles = [
+    ['btn-clouds', 'showClouds'],
     ['btn-grid', 'showGrid'],
     ['btn-arms', 'showArms'],
     ['btn-rings', 'showRings'],

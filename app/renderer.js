@@ -16,14 +16,14 @@ const LY_PER_PARSEC = 3.26156;
 // Rendering
 const MAG_LIMIT = 12.0;
 const MAG_BRIGHT = -2.0;
-const BASE_POINT_SIZE = 320.0;
+const BASE_POINT_SIZE = 70.0;
 const MIN_POINT_SIZE = 1.0;
-const MAX_POINT_SIZE = 96.0;
+const MAX_POINT_SIZE = 32.0;
 
 // Bloom
-const BLOOM_STRENGTH = 0.8;
-const BLOOM_RADIUS = 0.4;
-const BLOOM_THRESHOLD = 0.15;
+const BLOOM_STRENGTH = 0.5;
+const BLOOM_RADIUS = 0.3;
+const BLOOM_THRESHOLD = 0.2;
 
 // Galactic model (shared between procedural generation and minimap)
 const GC_X = 26000;          // Galactic center offset from Sol along +x (ly)
@@ -290,12 +290,12 @@ const fragmentShader = /* glsl */ `
     vec2 center = gl_PointCoord - 0.5;
     float r = length(center) * 2.0;
 
-    float core = exp(-r * r * 4.0);
-    float halo = exp(-r * r * 1.5) * 0.3;
-    float haloStrength = smoothstep(4.0, 32.0, vPointSize);
+    float core = exp(-r * r * 6.0);           // tighter core — more point-like
+    float halo = exp(-r * r * 2.0) * 0.15;    // subtler halo
+    float haloStrength = smoothstep(6.0, 24.0, vPointSize);
     float alpha = core + halo * haloStrength;
 
-    float whiten = smoothstep(24.0, 64.0, vPointSize) * 0.6;
+    float whiten = smoothstep(20.0, 32.0, vPointSize) * 0.3;
     vec3 color = mix(vColor, vec3(1.0), whiten);
 
     float intensity = vBrightness;

@@ -109,6 +109,31 @@
     color: #889;
     font-size: 11px;
   }
+
+  /* --- Mini-map popup --- */
+  #minimap-popup {
+    display: none;
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.85);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px;
+    z-index: 30;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #minimap-popup.visible { display: flex; gap: 10px; }
+  .minimap-panel {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .minimap-panel canvas {
+    border: 1px solid #222;
+    border-radius: 3px;
+  }
+  .minimap-panel .minimap-label {
+    color: #666; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
@@ -119,6 +144,18 @@
   <div><span class="label">Probe:</span> <span class="val" id="hud-probe">—</span></div>
   <div><span class="label">Nearest:</span> <span class="val" id="hud-nearest">—</span></div>
   <div><span class="label">FPS:</span> <span class="val" id="hud-fps">—</span></div>
+</div>
+
+<!-- Mini-map popup -->
+<div id="minimap-popup">
+  <div class="minimap-panel">
+    <canvas id="minimap-xy" width="180" height="180"></canvas>
+    <span class="minimap-label">Top (X-Y)</span>
+  </div>
+  <div class="minimap-panel">
+    <canvas id="minimap-xz" width="180" height="180"></canvas>
+    <span class="minimap-label">Side (X-Z)</span>
+  </div>
 </div>
 
 <!-- Bottom controls -->
@@ -132,6 +169,7 @@
 
     <span class="ctrl-label" style="min-width:auto">Speed</span>
     <div class="toggle-group" id="speed-group">
+      <button class="speed-btn" data-speed="3.1688e-8">1:1</button>
       <button class="speed-btn" data-speed="100">100</button>
       <button class="speed-btn" data-speed="1000">1k</button>
       <button class="speed-btn active" data-speed="10000">10k</button>
@@ -159,6 +197,7 @@
       <button id="btn-rings" class="toggle-overlay" title="Distance rings from Sol">Rings</button>
       <button id="btn-trail" class="toggle-overlay" title="Probe trajectory trail">Trail</button>
       <button id="btn-labels" class="toggle-overlay" title="Landmark labels">Labels</button>
+      <button id="btn-map" class="toggle-overlay" title="Galactic position map">Map</button>
     </div>
   </div>
 

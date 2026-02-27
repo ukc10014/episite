@@ -102,6 +102,7 @@ const sim = {
   showRings: false,
   showTrail: false,
   showLabels: false,
+  showMap: false,
 };
 
 // Derived: current probe position & velocity vector (updated each frame)
@@ -588,6 +589,196 @@ function syncOverlayVisibility() {
   ringsGroup.visible = sim.showRings;
   trailGroup.visible = sim.showTrail;
   labelsGroup.visible = sim.showLabels;
+
+  const popup = document.getElementById('minimap-popup');
+  popup.classList.toggle('visible', sim.showMap);
+}
+
+// ---------------------------------------------------------------------------
+// Mini-map drawing
+// ---------------------------------------------------------------------------
+
+// Galaxy geometry (in world coords: Sol at origin, +x toward galactic center)
+const GC_X = 26000;     // Galactic center is ~26k ly from Sol along +x
+const GALAXY_R = 50000;  // Milky Way disk radius ~50k ly
+const GALAXY_THICK = 2000; // Disk thickness ~2k ly
+const MAP_RANGE = 70000; // Canvas shows ±70k ly from galactic center
+
+// Logarithmic spiral arms (4 arms, from galactic center)
+// r = a * e^(b*theta), with different starting angles
+const SPIRAL_A = 2000;
+const SPIRAL_B = 0.22;
+const SPIRAL_STARTS = [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2];
+
+function drawSpiralArm(ctx, gcCanvasX, gcCanvasY, scale, startAngle) {
+  ctx.beginPath();
+  let first = true;
+  for (let theta = 0; theta < 6 * Math.PI; theta += 0.05) {
+    const r = SPIRAL_A * Math.exp(SPIRAL_B * theta);
+    if (r > GALAXY_R) break;
+    const angle = theta + startAngle;
+    // Galaxy coords (centered on GC): convert to canvas
+    const gx = r * Math.cos(angle);
+    const gy = r * Math.sin(angle);
+    const canvasX = gcCanvasX + gx * scale;
+    const canvasY = gcCanvasY - gy * scale;
+    if (first) { ctx.moveTo(canvasX, canvasY); first = false; }
+    else ctx.lineTo(canvasX, canvasY);
+  }
+  ctx.stroke();
+}
+
+function drawMiniMapXY(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#0a0a10';
+  ctx.fillRect(0, 0, w, h);
+
+  // Map is centered on galactic center
+  const scale = (w / 2 - 6) / MAP_RANGE;
+  // Galactic center at canvas center
+  const gcX = w / 2;
+  const gcY = h / 2;
+  // Sol position on canvas (GC is at +26k ly in world x, so Sol is at -26k from GC)
+  const solCanvasX = gcX - GC_X * scale;
+  const solCanvasY = gcY;
+
+  // Galactic disk outline
+  ctx.strokeStyle = '#222238';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(gcX, gcY, GALAXY_R * scale, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Spiral arms
+  ctx.strokeStyle = '#1e2040';
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.6;
+  for (const startAngle of SPIRAL_STARTS) {
+    drawSpiralArm(ctx, gcX, gcY, scale, startAngle);
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Galactic center marker
+  ctx.fillStyle = '#444';
+  ctx.beginPath();
+  ctx.arc(gcX, gcY, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('GC', gcX, gcY - 5);
+
+  // Sol
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(solCanvasX, solCanvasY, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#888';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Sol', solCanvasX, solCanvasY + 10);
+
+  // Probe position (world coords: Sol at origin)
+  const probeCanvasX = solCanvasX + probePos.x * scale;
+  const probeCanvasY = solCanvasY - probePos.y * scale;
+  ctx.fillStyle = '#ff3333';
+  ctx.shadowColor = '#ff3333';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(probeCanvasX, probeCanvasY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Scale bar: 10k ly
+  const barLen = 10000 * scale;
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w - 6 - barLen, h - 10);
+  ctx.lineTo(w - 6, h - 10);
+  ctx.stroke();
+  ctx.fillStyle = '#444';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('10k ly', w - 6, h - 14);
+}
+
+function drawMiniMapXZ(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#0a0a10';
+  ctx.fillRect(0, 0, w, h);
+
+  const scale = (w / 2 - 6) / MAP_RANGE;
+  const gcX = w / 2;
+  const midY = h / 2;
+  const solCanvasX = gcX - GC_X * scale;
+
+  // Disk edge-on: ellipse centered on GC
+  ctx.strokeStyle = '#222238';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(gcX, midY, GALAXY_R * scale, GALAXY_THICK * scale, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Faint filled disk
+  ctx.fillStyle = 'rgba(25, 25, 50, 0.3)';
+  ctx.beginPath();
+  ctx.ellipse(gcX, midY, GALAXY_R * scale, GALAXY_THICK * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Galactic center
+  ctx.fillStyle = '#444';
+  ctx.beginPath();
+  ctx.arc(gcX, midY, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('GC', gcX, midY - 5);
+
+  // Sol
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(solCanvasX, midY, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#888';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Sol', solCanvasX, midY + 10);
+
+  // Probe (x → horizontal, z → vertical)
+  const probeCanvasX = solCanvasX + probePos.x * scale;
+  const probeCanvasY = midY - probePos.z * scale;
+  ctx.fillStyle = '#ff3333';
+  ctx.shadowColor = '#ff3333';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(probeCanvasX, probeCanvasY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Scale bar
+  const barLen = 10000 * scale;
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(w - 6 - barLen, h - 10);
+  ctx.lineTo(w - 6, h - 10);
+  ctx.stroke();
+  ctx.fillStyle = '#444';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('10k ly', w - 6, h - 14);
+}
+
+function drawMiniMap() {
+  if (!sim.showMap) return;
+
+  const xyCanvas = document.getElementById('minimap-xy');
+  const xzCanvas = document.getElementById('minimap-xz');
+
+  drawMiniMapXY(xyCanvas.getContext('2d'), xyCanvas.width, xyCanvas.height);
+  drawMiniMapXZ(xzCanvas.getContext('2d'), xzCanvas.width, xzCanvas.height);
 }
 
 // ---------------------------------------------------------------------------
@@ -637,6 +828,7 @@ function animate() {
   updateCamera();
   syncOverlayVisibility();
   updateTrail();
+  drawMiniMap();
   controls.update();
   composer.render();
   cssRenderer.render(scene, camera);
@@ -751,7 +943,7 @@ function setupUI() {
   // Speed buttons
   document.querySelectorAll('.speed-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      sim.speed = parseInt(btn.dataset.speed);
+      sim.speed = parseFloat(btn.dataset.speed);
       document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
@@ -794,6 +986,7 @@ function setupUI() {
     ['btn-rings', 'showRings'],
     ['btn-trail', 'showTrail'],
     ['btn-labels', 'showLabels'],
+    ['btn-map', 'showMap'],
   ];
   overlayToggles.forEach(([id, key]) => {
     const btn = document.getElementById(id);

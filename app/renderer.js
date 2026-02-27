@@ -585,6 +585,10 @@ const nebulaFragmentShader = /* glsl */ `
 // ---------------------------------------------------------------------------
 
 async function init() {
+  const status = document.getElementById('hud-stars');
+  const setStatus = (msg) => { status.textContent = msg; };
+
+  setStatus('Downloading star catalog...');
   console.log('[VNP] Loading star data...');
 
   const [binResponse, metaResponse, landmarksResponse] = await Promise.all([
@@ -593,6 +597,7 @@ async function init() {
     fetch(`${DATA_DIR}/landmarks.json`),
   ]);
 
+  setStatus('Parsing star data...');
   const binBuffer = await binResponse.arrayBuffer();
   metadata = await metaResponse.json();
   landmarks = await landmarksResponse.json();
@@ -602,6 +607,8 @@ async function init() {
   console.log(`[VNP] Loaded ${hygCount.toLocaleString()} HYG stars`);
 
   // Generate procedural stars
+  setStatus(`Generating ${PROCEDURAL_COUNT.toLocaleString()} procedural stars...`);
+  await new Promise(r => setTimeout(r, 0)); // yield to render status update
   const procData = generateProceduralStars(PROCEDURAL_COUNT, 42);
   const totalCount = hygCount + PROCEDURAL_COUNT;
 
@@ -646,6 +653,8 @@ async function init() {
     });
   }
 
+  setStatus('Initializing renderer...');
+
   // --- Scene ---
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
@@ -688,6 +697,8 @@ async function init() {
   scene.add(new THREE.Points(geometry, starMaterial));
 
   // --- Nebula clouds ---
+  setStatus('Generating nebula clouds...');
+  await new Promise(r => setTimeout(r, 0));
   const nebulaData = generateNebulaClouds(NEBULA_COUNT, 123);
   const nebulaPositions = new Float32Array(NEBULA_COUNT * 3);
   const nebulaSizes = new Float32Array(NEBULA_COUNT);

@@ -134,6 +134,44 @@
     color: #666; font-size: 10px; text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  /* --- MW Debug Panel --- */
+  #mw-debug {
+    display: none;
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 12px 14px;
+    z-index: 40;
+    min-width: 260px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #mw-debug.visible { display: block; }
+  #mw-debug h3 {
+    margin: 0 0 8px; font-size: 11px; color: #888;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .dbg-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+  }
+  .dbg-row label {
+    color: #777; font-size: 10px; min-width: 75px; text-align: right;
+  }
+  .dbg-row input[type=range] {
+    flex: 1; height: 3px;
+    -webkit-appearance: none; appearance: none;
+    background: #333; border-radius: 2px; outline: none;
+  }
+  .dbg-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #888; cursor: pointer;
+  }
+  .dbg-row .dbg-val {
+    color: #aaa; font-size: 10px; min-width: 55px; text-align: left;
+  }
 </style>
 </head>
 <body>
@@ -155,6 +193,81 @@
   <div class="minimap-panel">
     <canvas id="minimap-xz" width="180" height="180"></canvas>
     <span class="minimap-label">Side (X-Z)</span>
+  </div>
+</div>
+
+<!-- MW Debug Panel -->
+<div id="mw-debug">
+  <h3>Milky Way Tuning</h3>
+  <div class="dbg-row" style="margin-bottom:8px">
+    <label>Preset</label>
+    <select id="dbg-preset" style="flex:1;background:#111;color:#ccc;border:1px solid #333;padding:3px 6px;border-radius:3px;font-family:inherit;font-size:10px">
+      <option value="current" selected>Current</option>
+      <option value="default">Default</option>
+      <option value="subtle">Subtle</option>
+      <option value="dramatic">Dramatic</option>
+      <option value="clean">Clean (no noise)</option>
+    </select>
+  </div>
+  <div class="dbg-row">
+    <label>Emission</label>
+    <input type="range" id="dbg-emission" min="-5" max="-1" step="0.05" value="-4.25">
+    <span class="dbg-val" id="dbg-emission-val">5.62e-5</span>
+  </div>
+  <div class="dbg-row">
+    <label>Dust Abs</label>
+    <input type="range" id="dbg-dust" min="-4" max="-1" step="0.05" value="-2.4">
+    <span class="dbg-val" id="dbg-dust-val">3.98e-3</span>
+  </div>
+  <div class="dbg-row">
+    <label>Disk Height</label>
+    <input type="range" id="dbg-diskh" min="100" max="3000" step="10" value="1420">
+    <span class="dbg-val" id="dbg-diskh-val">1420 ly</span>
+  </div>
+  <div class="dbg-row">
+    <label>Dust Height</label>
+    <input type="range" id="dbg-dusth" min="10" max="400" step="5" value="90">
+    <span class="dbg-val" id="dbg-dusth-val">90 ly</span>
+  </div>
+  <div class="dbg-row">
+    <label>Exposure</label>
+    <input type="range" id="dbg-exposure" min="0.1" max="10" step="0.1" value="1.0">
+    <span class="dbg-val" id="dbg-exposure-val">1.00</span>
+  </div>
+  <div class="dbg-row">
+    <label>Glow Noise</label>
+    <input type="range" id="dbg-noise" min="0" max="4" step="0.05" value="1.85">
+    <span class="dbg-val" id="dbg-noise-val">1.85</span>
+  </div>
+  <div class="dbg-row">
+    <label>Dust Noise</label>
+    <input type="range" id="dbg-dustnoise" min="0" max="4" step="0.05" value="2.45">
+    <span class="dbg-val" id="dbg-dustnoise-val">2.45</span>
+  </div>
+  <div class="dbg-row">
+    <label>Rift Str</label>
+    <input type="range" id="dbg-rift" min="0" max="1" step="0.005" value="0.42">
+    <span class="dbg-val" id="dbg-rift-val">0.42</span>
+  </div>
+  <div class="dbg-row">
+    <label>Bulge Str</label>
+    <input type="range" id="dbg-bulge" min="0" max="3" step="0.05" value="1.15">
+    <span class="dbg-val" id="dbg-bulge-val">1.15</span>
+  </div>
+  <div class="dbg-row">
+    <label>Disk Taper</label>
+    <input type="range" id="dbg-dusttaper" min="0.5" max="5" step="0.1" value="3.0">
+    <span class="dbg-val" id="dbg-dusttaper-val">3.00</span>
+  </div>
+  <div class="dbg-row">
+    <label>Dust Taper</label>
+    <input type="range" id="dbg-dustradtaper" min="0.5" max="5" step="0.1" value="2.5">
+    <span class="dbg-val" id="dbg-dustradtaper-val">2.50</span>
+  </div>
+  <div class="dbg-row">
+    <label>Disk Warp</label>
+    <input type="range" id="dbg-warp" min="0" max="2" step="0.05" value="1.0">
+    <span class="dbg-val" id="dbg-warp-val">1.00</span>
   </div>
 </div>
 
@@ -192,7 +305,7 @@
 
     <span class="ctrl-label" style="min-width:auto; margin-left:8px">Overlays</span>
     <div class="toggle-group">
-      <button id="btn-sail" class="toggle-overlay active" title="Solar sail (degrades over 100 years)">Sail</button>
+      <button id="btn-sail" class="toggle-overlay" title="Solar sail (degrades over 100 years)">Sail</button>
       <button id="btn-clouds" class="toggle-overlay active" title="Nebula gas clouds">Clouds</button>
       <button id="btn-grid" class="toggle-overlay" title="Galactic plane grid">Grid</button>
       <button id="btn-arms" class="toggle-overlay" title="Spiral arm centerlines">Arms</button>
@@ -200,6 +313,7 @@
       <button id="btn-trail" class="toggle-overlay" title="Probe trajectory trail">Trail</button>
       <button id="btn-labels" class="toggle-overlay" title="Landmark labels">Labels</button>
       <button id="btn-map" class="toggle-overlay" title="Galactic position map">Map</button>
+      <button id="btn-mwtune" class="toggle-overlay" title="MW shader debug panel" style="background:#1a1a00;border-color:#664;color:#aa8">Tune</button>
     </div>
   </div>
 

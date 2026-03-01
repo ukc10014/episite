@@ -43,15 +43,12 @@ const HYG_EXCLUSION_RADIUS = 500; // ly — don't place procedural stars near So
 const SAIL_DISTANCE = 1000;      // meters ahead of probe
 const SAIL_SIZE = 2000;           // meters (2km wide diamond)
 const SAIL_DEGRADE_TIME = 1000;   // years until mostly destroyed
-const SAIL_BOOM_WIDTH = 0.008;    // fraction of half-span for boom/frame thickness
+const SAIL_BOOM_WIDTH = 0.002;    // fraction of half-span for boom/frame thickness
 
-// Nebula gas clouds
-const NEBULA_COUNT = 4000;
-const NEBULA_SCALE_HEIGHT = 150;    // ly — gas is thinner than stellar disk
-const NEBULA_BASE_SIZE = 200000.0;  // world-space — must be huge so blobs overlap into smooth band
-const NEBULA_MIN_SIZE = 8.0;        // px — keep distant clouds visible
-const NEBULA_MAX_SIZE = 512.0;      // px
-const NEBULA_EXCLUSION_RADIUS = 50; // ly from Sol — Milky Way is visible from Earth
+// Milky Way background
+const MW_RAY_STEPS = 32;
+const MW_MAX_DIST = 60000.0;       // ly — max ray march distance
+const MW_DUST_SCALE_HEIGHT = 100.0; // ly — dust disk thinner than stellar
 
 // ---------------------------------------------------------------------------
 // Probe definitions
@@ -125,7 +122,7 @@ const sim = {
   doppler: false,
   searchlight: false,
   // Overlay toggles
-  showSail: true,     // solar sail ahead of probe
+  showSail: false,    // solar sail ahead of probe
   showClouds: true,   // on by default — core to Milky Way look
   showGrid: false,
   showArms: false,
@@ -323,6 +320,7 @@ let namedStarPositions = []; // {name, pos: Vector3}
 
 // Solar sail (separate near-field scene)
 let sailScene, sailCamera, sailMesh, sailMaterial;
+let mwSkyMaterial; // Milky Way sky sphere material
 
 // Overlay groups
 let gridGroup, armsGroup, ringsGroup, trailGroup, labelsGroup, nebulaGroup;
@@ -332,6 +330,9 @@ let trailPositions; // Float32Array backing the trail geometry
 let frameCount = 0;
 let lastFpsTime = performance.now();
 let lastFrameTime = performance.now();
+let needsRender = true;  // dirty flag — skip rendering when nothing changed
+
+function markDirty() { needsRender = true; }
 
 // ---------------------------------------------------------------------------
 // Procedural star generation
@@ -481,112 +482,228 @@ function generateProceduralStars(count, seed) {
   return data;
 }
 
-// ---------------------------------------------------------------------------
-// Nebula cloud generation
-// ---------------------------------------------------------------------------
-
-function generateNebulaClouds(count, seed) {
-  const t0 = performance.now();
-  const rand = mulberry32(seed);
-
-  const maxDensity = galacticDensity(GC_X, 0, 0);
-
-  // 8 floats per cloud: x, y, z, size, r, g, b, opacity
-  const data = new Float32Array(count * 8);
-  let accepted = 0;
-  const cylR = GALAXY_R;
-  const cylZ = NEBULA_SCALE_HEIGHT * 10; // sampling half-height
-
-  while (accepted < count) {
-    const gr = cylR * Math.sqrt(rand());
-    const gtheta = rand() * 2 * Math.PI;
-    const gx = gr * Math.cos(gtheta);
-    const gy = gr * Math.sin(gtheta);
-    const gz = (rand() * 2 - 1) * cylZ;
-
-    // World coords (Sol at origin)
-    const wx = gx + GC_X;
-    const wy = gy;
-    const wz = gz;
-
-    // Skip near Sol
-    const distSol = Math.sqrt(wx * wx + wy * wy + wz * wz);
-    if (distSol < NEBULA_EXCLUSION_RADIUS) continue;
-
-    // Skip bulge region (no diffuse gas clouds near GC)
-    const R_gc = Math.sqrt(gx * gx + gy * gy);
-    if (R_gc < 3000) continue;
-
-    // Use tighter z scale height for gas
-    const density = galacticDensity(wx, wy, wz) *
-      Math.exp(-Math.abs(wz) / NEBULA_SCALE_HEIGHT) /
-      Math.exp(-Math.abs(wz) / DISK_SCALE_HEIGHT);
-    if (rand() > density / maxDensity) continue;
-
-    // Color palette: 60% blue-white, 25% warm white, 15% pink
-    const colorRoll = rand();
-    let r, g, b;
-    if (colorRoll < 0.60) {
-      r = 0.5; g = 0.6; b = 1.0;
-    } else if (colorRoll < 0.85) {
-      r = 0.8; g = 0.75; b = 0.7;
-    } else {
-      r = 1.0; g = 0.4; b = 0.5;
-    }
-
-    const size = NEBULA_BASE_SIZE * (0.5 + rand() * 1.5);
-    const opacity = 0.03 + rand() * 0.06;
-
-    const base = accepted * 8;
-    data[base]     = wx;
-    data[base + 1] = wy;
-    data[base + 2] = wz;
-    data[base + 3] = size;
-    data[base + 4] = r;
-    data[base + 5] = g;
-    data[base + 6] = b;
-    data[base + 7] = opacity;
-    accepted++;
-  }
-
-  const elapsed = (performance.now() - t0).toFixed(0);
-  console.log(`[VNP] Generated ${count} nebula clouds in ${elapsed}ms`);
-  return data;
-}
 
 // ---------------------------------------------------------------------------
-// Nebula shaders
+// Milky Way sky sphere shaders
 // ---------------------------------------------------------------------------
 
-const nebulaVertexShader = /* glsl */ `
-  uniform float uPixelRatio;
-  uniform float uMinSize;
-  uniform float uMaxSize;
-  attribute float aSize;
-  attribute vec3  aColor;
-  attribute float aOpacity;
-  varying vec3  vColor;
-  varying float vOpacity;
+const mwVertexShader = /* glsl */ `
+  varying vec3 vDir;
   void main() {
-    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-    float dist = length(mvPos.xyz);
-    float size = aSize * uPixelRatio / max(dist, 1.0);
-    gl_PointSize = clamp(size, uMinSize, uMaxSize);
-    vColor = aColor;
-    vOpacity = aOpacity * smoothstep(uMaxSize, uMinSize, size);
-    gl_Position = projectionMatrix * mvPos;
+    vDir = position; // unit sphere direction = world-space view direction
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
-const nebulaFragmentShader = /* glsl */ `
-  varying vec3  vColor;
-  varying float vOpacity;
+const mwFragmentShader = /* glsl */ `
+  uniform vec3 uProbePos;
+  uniform float uEmission;      // emission coefficient
+  uniform float uDustAbs;       // dust absorption coefficient
+  uniform float uDiskHeight;    // stellar disk scale height (ly)
+  uniform float uDustHeight;    // dust disk base height (ly)
+  uniform float uExposure;      // exposure multiplier
+  uniform float uNoiseAmp;      // noise amp for emission (glow-to-void boundary)
+  uniform float uDustNoiseAmp;  // noise amp for dust (dust-to-glow boundary)
+  uniform float uRiftStrength;  // Great Rift midplane dust strength
+  uniform float uBulgeStr;      // bulge brightness multiplier
+  uniform float uWarpStr;       // galactic disk warp strength
+  uniform float uDiskTaper;     // disk edge taper — controls how quickly the stellar disk thins at large radii
+  uniform float uDustRadTaper;  // dust radial taper — controls how far dust extends from GC
+  varying vec3 vDir;
+
+  const float PI = 3.14159265;
+  const float GC_X_C = ${GC_X.toFixed(1)};
+  const float DISK_SL = ${DISK_SCALE_LENGTH.toFixed(1)};
+  const float BULGE_SR = ${BULGE_SCALE_R.toFixed(1)};
+  const float SPIRAL_A_C = ${SPIRAL_A.toFixed(1)};
+  const float SPIRAL_B_C = ${SPIRAL_B.toFixed(4)};
+
+  // --- Noise functions ---
+  float hash2(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+  float hash3(vec3 p) {
+    return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+  }
+
+  float noise2(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash2(cell), hash2(cell + vec2(1.0, 0.0)), f.x),
+               mix(hash2(cell + vec2(0.0, 1.0)), hash2(cell + vec2(1.0, 1.0)), f.x), f.y);
+  }
+
+  float noise3(vec3 p) {
+    vec3 cell = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float n000 = hash3(cell);
+    float n100 = hash3(cell + vec3(1,0,0));
+    float n010 = hash3(cell + vec3(0,1,0));
+    float n110 = hash3(cell + vec3(1,1,0));
+    float n001 = hash3(cell + vec3(0,0,1));
+    float n101 = hash3(cell + vec3(1,0,1));
+    float n011 = hash3(cell + vec3(0,1,1));
+    float n111 = hash3(cell + vec3(1,1,1));
+    return mix(mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+               mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y), f.z);
+  }
+
+  // Domain-warped FBM — feeds noise back into coordinates for filamentary,
+  // tendril-like structures (like ink in water). This is the key to getting
+  // the ribbon/filament shapes seen in the Gaia all-sky map.
+  float fbm3(vec3 p) {
+    float v = 0.0;
+    v += noise3(p) * 0.5;
+    v += noise3(p * 2.0 + 1.7) * 0.25;
+    v += noise3(p * 4.0 + 3.3) * 0.125;
+    v += noise3(p * 8.0 + 5.1) * 0.0625;
+    return v;
+  }
+
+  float warpedFbm(vec3 p) {
+    // First pass: get base FBM
+    float f1 = fbm3(p);
+    // Domain warp: offset coordinates by the noise itself
+    // This creates filamentary, stretched structures
+    vec3 warped = p + vec3(f1 * 1.5, f1 * 1.2, f1 * 0.8);
+    // Second pass on warped domain
+    return fbm3(warped);
+  }
+
+  // Spiral arm factor — unrolled 4 arms
+  float armFactor(float R, float theta, float logR, float width) {
+    float af = 1.0;
+    float w2 = width * width;
+    float dT0 = theta - logR;
+    dT0 -= floor(dT0 / (2.0 * PI) + 0.5) * 2.0 * PI;
+    af += exp(-0.5 * dT0 * dT0 / w2);
+    float dT1 = theta - (logR + PI * 0.5);
+    dT1 -= floor(dT1 / (2.0 * PI) + 0.5) * 2.0 * PI;
+    af += exp(-0.5 * dT1 * dT1 / w2);
+    float dT2 = theta - (logR + PI);
+    dT2 -= floor(dT2 / (2.0 * PI) + 0.5) * 2.0 * PI;
+    af += exp(-0.5 * dT2 * dT2 / w2);
+    float dT3 = theta - (logR + PI * 1.5);
+    dT3 -= floor(dT3 / (2.0 * PI) + 0.5) * 2.0 * PI;
+    af += exp(-0.5 * dT3 * dT3 / w2);
+    return af;
+  }
+
   void main() {
-    vec2 c = gl_PointCoord - 0.5;
-    float r = length(c) * 2.0;
-    float alpha = exp(-r * r * 1.5);  // soft Gaussian
-    float intensity = alpha * vOpacity;
-    gl_FragColor = vec4(vColor * intensity, intensity);
+    vec3 dir = normalize(vDir);
+    vec3 color = vec3(0.0);
+    float transmittance = 1.0;
+    float maxDist = 80000.0;
+    float stepSize = maxDist / 24.0;
+
+    // Jitter to reduce banding
+    float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) * stepSize;
+
+    for (int step = 0; step < 24; step++) {
+      float t = (float(step) + 0.5) * stepSize + jitter;
+      vec3 sp = uProbePos + dir * t;
+
+      float gx = sp.x - GC_X_C;
+      float gy = sp.y;
+      float R = length(vec2(gx, gy));
+      float theta = atan(gy, gx);
+
+      // --- Galactic warp (smooth onset) ---
+      float warpR = smoothstep(8000.0, 30000.0, R);
+      float warpOffset = uWarpStr * warpR * warpR * sin(theta) * 3000.0;
+      float gz = sp.z - warpOffset;
+
+      float logR = log(max(R, 1.0) / SPIRAL_A_C) / SPIRAL_B_C;
+
+      // --- Large-scale fractal noise for cloud structure ---
+      vec3 noiseCoord = vec3(gx, gy, gz * 1.5) / 8000.0;
+      float fractal = warpedFbm(noiseCoord);
+      float dustFractal = warpedFbm(noiseCoord + vec3(50.0, 23.0, 11.0));
+
+      // Radial noise taper: full noise near GC, fading to zero at disk edge.
+      // This makes outer regions converge to a clean, thin disc profile
+      // while the central regions stay puffy and irregular.
+      float noiseTaper = smoothstep(DISK_SL * 3.5, DISK_SL * 0.5, R);
+
+      // --- Stellar emission density ---
+      float baseDensity = exp(-R / DISK_SL);
+      if (R > 200.0) {
+        baseDensity *= armFactor(R, theta, logR, 0.25);
+      }
+
+      // Disk taper: disk gets thinner at large radii, giving lenticular shape.
+      // uDiskTaper controls the falloff radius (in DISK_SL units).
+      float diskTaper = smoothstep(DISK_SL * uDiskTaper, DISK_SL * uDiskTaper * 0.2, R);
+      float effectiveHeight = uDiskHeight * (0.05 + 0.95 * diskTaper);
+
+      // Fractal emission boundary (glow-to-void):
+      // Near center: big irregular cloud protrusions.
+      // At edges: smooth exponential falloff (thin disc).
+      float noiseContrib = fractal * uNoiseAmp * noiseTaper;
+      float cloudBoundary = effectiveHeight * (0.1 + noiseContrib);
+      // Blend between fractal boundary and smooth exp falloff at edges
+      float zFade = mix(
+        exp(-abs(gz) / (effectiveHeight * 0.3)),  // smooth thin disc
+        smoothstep(cloudBoundary, cloudBoundary * 0.2, abs(gz)),  // fractal boundary
+        noiseTaper
+      );
+      float sd = baseDensity * zFade * diskTaper;
+
+      // Brightness variation (also tapered)
+      sd *= (0.3 + fractal * 1.4 * noiseTaper + (1.0 - noiseTaper) * 0.7);
+
+      // Bulge
+      float bulgeR = sqrt(R * R + 4.0 * gz * gz);
+      sd += uBulgeStr * exp(-bulgeR / BULGE_SR);
+
+      // --- Dust density with fractal filamentary edges ---
+      float dustBase = exp(-R / (DISK_SL * 0.7));
+      // Radial dust taper: dust confined near GC, fades at uDustRadTaper * DISK_SL
+      float dustRadFade = smoothstep(DISK_SL * uDustRadTaper, DISK_SL * uDustRadTaper * 0.2, R);
+      dustBase *= dustRadFade;
+      if (R > 200.0) {
+        dustBase *= armFactor(R, theta, logR, 0.12);
+      }
+
+      // Fractal dust boundary — tapered so outer disk has clean dust lane
+      float dustNoiseContrib = dustFractal * uDustNoiseAmp * noiseTaper;
+      float dustBoundary = uDustHeight + 400.0 * dustNoiseContrib;
+      float dustZFade = smoothstep(dustBoundary, dustBoundary * 0.1, abs(gz));
+      float dd = dustBase * dustZFade;
+
+      // Filamentary dust clumping
+      dd *= (0.2 + dustFractal * 1.8);
+
+      // Great Rift
+      float riftNoise = noise2(vec2(gx, gy) / 4000.0 + vec2(33.0, 7.0));
+      float riftDetail = noise2(vec2(gx, gy) / 1500.0 + vec2(71.0, 3.0));
+      float riftFractal = riftNoise * 0.6 + riftDetail * 0.4;
+      float riftBoundary = 60.0 + 180.0 * riftFractal;
+      float riftFade = smoothstep(riftBoundary, riftBoundary * 0.1, abs(gz));
+      dd += uRiftStrength * riftFade * exp(-R / (DISK_SL * 1.2));
+
+      // --- Accumulate ---
+      float warmth = smoothstep(0.15, 0.8, sd);
+      vec3 emColor = mix(vec3(0.35, 0.4, 0.55), vec3(0.85, 0.7, 0.45), warmth);
+      emColor += vec3(0.15, 0.0, 0.05) * smoothstep(0.5, 1.5, sd);
+
+      color += emColor * sd * stepSize * uEmission * transmittance;
+
+      // Dust absorption
+      float tau = dd * stepSize * uDustAbs;
+      transmittance *= exp(-tau);
+
+      if (transmittance < 0.01) break;
+    }
+
+    // Tone mapping
+    color *= uExposure;
+    color = color / (1.0 + color);
+    color = pow(color, vec3(0.85));
+
+    gl_FragColor = vec4(color, 1.0);
   }
 `;
 
@@ -675,7 +792,7 @@ const sailFragmentShader = /* glsl */ `
 
     // Frame is slightly darker, more structural
     if (onFrame) {
-      color = vec3(0.35, 0.30, 0.20);
+      color = vec3(0.15, 0.14, 0.13);
     }
 
     // Subtle variation across the fabric
@@ -813,48 +930,37 @@ async function init() {
 
   scene.add(new THREE.Points(geometry, starMaterial));
 
-  // --- Nebula clouds ---
-  setStatus('Generating nebula clouds...');
-  await new Promise(r => setTimeout(r, 0));
-  const nebulaData = generateNebulaClouds(NEBULA_COUNT, 123);
-  const nebulaPositions = new Float32Array(NEBULA_COUNT * 3);
-  const nebulaSizes = new Float32Array(NEBULA_COUNT);
-  const nebulaColors = new Float32Array(NEBULA_COUNT * 3);
-  const nebulaOpacities = new Float32Array(NEBULA_COUNT);
-
-  for (let i = 0; i < NEBULA_COUNT; i++) {
-    const src = i * 8;
-    nebulaPositions[i * 3]     = nebulaData[src];
-    nebulaPositions[i * 3 + 1] = nebulaData[src + 1];
-    nebulaPositions[i * 3 + 2] = nebulaData[src + 2];
-    nebulaSizes[i]             = nebulaData[src + 3];
-    nebulaColors[i * 3]        = nebulaData[src + 4];
-    nebulaColors[i * 3 + 1]    = nebulaData[src + 5];
-    nebulaColors[i * 3 + 2]    = nebulaData[src + 6];
-    nebulaOpacities[i]         = nebulaData[src + 7];
-  }
-
-  const nebulaGeo = new THREE.BufferGeometry();
-  nebulaGeo.setAttribute('position', new THREE.BufferAttribute(nebulaPositions, 3));
-  nebulaGeo.setAttribute('aSize', new THREE.BufferAttribute(nebulaSizes, 1));
-  nebulaGeo.setAttribute('aColor', new THREE.BufferAttribute(nebulaColors, 3));
-  nebulaGeo.setAttribute('aOpacity', new THREE.BufferAttribute(nebulaOpacities, 1));
-
-  const nebulaMaterial = new THREE.ShaderMaterial({
-    vertexShader: nebulaVertexShader,
-    fragmentShader: nebulaFragmentShader,
+  // --- Milky Way background sky sphere ---
+  setStatus('Initializing Milky Way background...');
+  const mwGeo = new THREE.IcosahedronGeometry(1, 5);
+  mwSkyMaterial = new THREE.ShaderMaterial({
+    vertexShader: mwVertexShader,
+    fragmentShader: mwFragmentShader,
     uniforms: {
-      uPixelRatio: { value: webglRenderer.getPixelRatio() },
-      uMinSize:    { value: NEBULA_MIN_SIZE },
-      uMaxSize:    { value: NEBULA_MAX_SIZE },
+      uProbePos:     { value: new THREE.Vector3() },
+      uEmission:      { value: 0.0000562 },
+      uDustAbs:       { value: 0.00398 },
+      uDiskHeight:    { value: 1420.0 },
+      uDustHeight:    { value: 90.0 },
+      uExposure:      { value: 1.0 },
+      uNoiseAmp:      { value: 1.85 },
+      uDustNoiseAmp:  { value: 2.45 },
+      uRiftStrength:  { value: 0.42 },
+      uBulgeStr:      { value: 1.15 },
+      uWarpStr:       { value: 1.0 },
+      uDiskTaper:     { value: 3.0 },
+      uDustRadTaper:  { value: 2.5 },
     },
-    transparent: true,
+    side: THREE.BackSide,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    depthTest: false,
   });
-
+  const mwMesh = new THREE.Mesh(mwGeo, mwSkyMaterial);
+  mwMesh.scale.setScalar(100);
+  mwMesh.renderOrder = -1000;
+  mwMesh.frustumCulled = false;
   nebulaGroup = new THREE.Group();
-  nebulaGroup.add(new THREE.Points(nebulaGeo, nebulaMaterial));
+  nebulaGroup.add(mwMesh);
   scene.add(nebulaGroup);
 
   // --- Bloom ---
@@ -898,6 +1004,7 @@ async function init() {
   controls.enableZoom = false;   // zoom doesn't make sense for probe POV
   controls.enablePan = false;    // pan doesn't make sense either
   controls.rotateSpeed = 0.4;
+  controls.addEventListener('change', markDirty); // re-render when user rotates
   // We'll set the target to be a point ahead of the probe each frame
 
   // --- CSS2DRenderer for labels ---
@@ -1314,30 +1421,54 @@ function animate() {
   const dt = Math.min((now - lastFrameTime) / 1000, 0.1); // seconds, capped
   lastFrameTime = now;
 
-  simTick(dt);
+  // Simulation tick marks dirty if time advances
+  if (sim.playing) {
+    simTick(dt);
+    needsRender = true;
+  }
+
+  // Controls damping may still be animating after user releases mouse.
+  // OrbitControls.update() returns true in newer Three.js when it changed;
+  // the 'change' event listener on controls also sets needsRender.
+  controls.update();
+
+  // Skip all rendering if nothing changed
+  if (!needsRender) {
+    // Still count frames for FPS (will show 0 when idle — that's fine)
+    frameCount++;
+    if (now - lastFpsTime >= 500) {
+      document.getElementById('hud-fps').textContent = 'idle';
+      frameCount = 0;
+      lastFpsTime = now;
+    }
+    return;
+  }
+  needsRender = false;
+
   updateCamera();
   syncOverlayVisibility();
   updateTrail();
   drawMiniMap();
-  controls.update();
+
+  // Update Milky Way sky sphere to follow camera
+  if (nebulaGroup.visible) {
+    nebulaGroup.children[0].position.copy(camera.position);
+    mwSkyMaterial.uniforms.uProbePos.value.copy(probePos);
+  }
+
   composer.render();
 
   // Render solar sail on top (near-field, separate scene)
   if (sim.showSail) {
-    // Position sail along probe velocity direction, 1km ahead
     sailMesh.position.copy(probeVelDir).multiplyScalar(SAIL_DISTANCE);
-    // Sail faces back toward camera (probe)
     sailMesh.lookAt(0, 0, 0);
-    // Rotate 45° to make it a diamond orientation
     sailMesh.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 4);
 
-    // Sync sail camera with main camera orientation
     sailCamera.quaternion.copy(camera.quaternion);
     sailCamera.fov = camera.fov;
     sailCamera.aspect = camera.aspect;
     sailCamera.updateProjectionMatrix();
 
-    // Damage accumulation
     sailMaterial.uniforms.uDamage.value = Math.max(0, sim.time / SAIL_DEGRADE_TIME);
 
     webglRenderer.autoClear = false;
@@ -1426,6 +1557,7 @@ function selectProbe(index) {
   controls.update();
 
   updateHUD();
+  markDirty();
   console.log(`[VNP] Selected: ${PROBES[index].name} @ ${(PROBES[index].velocity * 100).toFixed(1)}% c`);
 }
 
@@ -1453,6 +1585,7 @@ function setupUI() {
     }
     btnPlay.innerHTML = sim.playing ? '&#9646;&#9646; Pause' : '&#9654; Play';
     btnPlay.classList.toggle('active', sim.playing);
+    markDirty();
   });
 
   // Speed buttons
@@ -1468,6 +1601,7 @@ function setupUI() {
   const timeSlider = document.getElementById('time-slider');
   timeSlider.addEventListener('input', () => {
     sim.time = parseFloat(timeSlider.value);
+    markDirty();
     updateHUD();
   });
 
@@ -1478,6 +1612,7 @@ function setupUI() {
     camera.fov = sim.fov;
     camera.updateProjectionMatrix();
     document.getElementById('fov-val').textContent = sim.fov + '°';
+    markDirty();
   });
 
   // Relativistic toggles
@@ -1491,6 +1626,7 @@ function setupUI() {
     btn.addEventListener('click', () => {
       sim[key] = !sim[key];
       btn.classList.toggle('active', sim[key]);
+      markDirty();
     });
   });
 
@@ -1510,7 +1646,69 @@ function setupUI() {
     btn.addEventListener('click', () => {
       sim[key] = !sim[key];
       btn.classList.toggle('active', sim[key]);
+      markDirty();
     });
+  });
+
+  // MW Tune debug panel toggle
+  const btnTune = document.getElementById('btn-mwtune');
+  const tunePanel = document.getElementById('mw-debug');
+  btnTune.addEventListener('click', () => {
+    tunePanel.classList.toggle('visible');
+    btnTune.classList.toggle('active');
+  });
+
+  // Wire up debug sliders → shader uniforms
+  const dbgSliders = [
+    { id: 'dbg-emission', uniform: 'uEmission', log: true, suffix: '' },
+    { id: 'dbg-dust', uniform: 'uDustAbs', log: true, suffix: '' },
+    { id: 'dbg-diskh', uniform: 'uDiskHeight', log: false, suffix: ' ly' },
+    { id: 'dbg-dusth', uniform: 'uDustHeight', log: false, suffix: ' ly' },
+    { id: 'dbg-exposure', uniform: 'uExposure', log: false, suffix: '' },
+    { id: 'dbg-noise', uniform: 'uNoiseAmp', log: false, suffix: '' },
+    { id: 'dbg-dustnoise', uniform: 'uDustNoiseAmp', log: false, suffix: '' },
+    { id: 'dbg-rift', uniform: 'uRiftStrength', log: false, suffix: '' },
+    { id: 'dbg-bulge', uniform: 'uBulgeStr', log: false, suffix: '' },
+    { id: 'dbg-dusttaper', uniform: 'uDiskTaper', log: false, suffix: '' },
+    { id: 'dbg-dustradtaper', uniform: 'uDustRadTaper', log: false, suffix: '' },
+    { id: 'dbg-warp', uniform: 'uWarpStr', log: false, suffix: '' },
+  ];
+
+  dbgSliders.forEach(({ id, uniform, log, suffix }) => {
+    const slider = document.getElementById(id);
+    const valSpan = document.getElementById(id + '-val');
+    slider.addEventListener('input', () => {
+      const raw = parseFloat(slider.value);
+      const val = log ? Math.pow(10, raw) : raw;
+      mwSkyMaterial.uniforms[uniform].value = val;
+      valSpan.textContent = (log ? val.toExponential(2) : val.toFixed(2)) + suffix;
+      markDirty();
+    });
+  });
+
+  // MW Presets
+  const mwPresets = {
+    'default':  { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 1.85, dustnoise: 2.45, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, warp: 1.0 },
+    'subtle':   { emission: -4.5, dust: -2.8, diskh: 800, dusth: 50, exposure: 0.8, noise: 1.0, dustnoise: 1.0, rift: 0.15, bulge: 0.5, dusttaper: 2.0, dustradtaper: 1.5, warp: 0.3 },
+    'dramatic': { emission: -4.0, dust: -2.6, diskh: 2970, dusth: 55, exposure: 1.5, noise: 1.65, dustnoise: 1.4, rift: 0.42, bulge: 2.7, dusttaper: 2.3, dustradtaper: 0.7, warp: 1.35 },
+    'clean':    { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 0.0, dustnoise: 0.0, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, warp: 0.0 },
+  };
+
+  // Map preset keys → slider IDs
+  const presetKeyToSlider = {
+    emission: 'dbg-emission', dust: 'dbg-dust', diskh: 'dbg-diskh', dusth: 'dbg-dusth',
+    exposure: 'dbg-exposure', noise: 'dbg-noise', dustnoise: 'dbg-dustnoise',
+    rift: 'dbg-rift', bulge: 'dbg-bulge', dusttaper: 'dbg-dusttaper', dustradtaper: 'dbg-dustradtaper', warp: 'dbg-warp',
+  };
+
+  document.getElementById('dbg-preset').addEventListener('change', (e) => {
+    const preset = mwPresets[e.target.value];
+    if (!preset) return;
+    for (const [key, sliderId] of Object.entries(presetKeyToSlider)) {
+      const slider = document.getElementById(sliderId);
+      slider.value = preset[key];
+      slider.dispatchEvent(new Event('input')); // triggers uniform update + markDirty
+    }
   });
 }
 
@@ -1528,6 +1726,7 @@ function onResize() {
   webglRenderer.setSize(w, h);
   composer.setSize(w, h);
   cssRenderer.setSize(w, h);
+  markDirty();
 }
 
 // ---------------------------------------------------------------------------

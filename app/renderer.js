@@ -509,6 +509,8 @@ const mwFragmentShader = /* glsl */ `
   uniform float uWarpStr;       // galactic disk warp strength
   uniform float uDiskTaper;     // disk edge taper — controls how quickly the stellar disk thins at large radii
   uniform float uDustRadTaper;  // dust radial taper — controls how far dust extends from GC
+  uniform float uDustLarge;     // weight of large-scale (~120°) dust structure
+  uniform float uDustFine;      // weight of medium+fine dust filaments
   varying vec3 vDir;
 
   const float PI = 3.14159265;
@@ -667,11 +669,34 @@ const mwFragmentShader = /* glsl */ `
         dustBase *= armFactor(R, theta, logR, 0.12);
       }
 
+      // Large-scale dust structure: 2D angular noise in (theta, R) space.
+      // Creates continent-sized dark patches and tendrils that hold their
+      // shape in projection (unlike 3D noise which averages out along rays).
+      // Multiple scales: galaxy-wide patches + medium filaments + fine detail.
+      vec2 dustAngCoord = vec2(theta * 3.0, R / 15000.0);  // ~120° patches
+      float dustStruct = noise2(dustAngCoord + vec2(17.3, 5.7));
+      // Medium scale: ~30° features with z-dependent offset for vertical tendrils
+      vec2 dustMedCoord = vec2(theta * 12.0, R / 5000.0 + gz / 3000.0);
+      float dustMed = noise2(dustMedCoord + vec2(41.0, 13.0));
+      // Fine filaments: ~10° features, stronger z coupling for vertical wisps
+      vec2 dustFineCoord = vec2(theta * 30.0, R / 2000.0 + gz / 1000.0);
+      float dustFine = noise2(dustFineCoord + vec2(73.0, 29.0));
+      // Combine: large shapes modulated by medium, with fine detail
+      float totalW = uDustLarge + uDustFine + 0.001;
+      float dustMask = (dustStruct * uDustLarge + (dustMed * 0.6 + dustFine * 0.4) * uDustFine) / totalW;
+      // Sharpen into cloud-like patches: push toward 0 or 1
+      dustMask = smoothstep(0.25, 0.65, dustMask);
+
       // Fractal dust boundary — tapered so outer disk has clean dust lane
       float dustNoiseContrib = dustFractal * uDustNoiseAmp * noiseTaper;
       float dustBoundary = uDustHeight + 400.0 * dustNoiseContrib;
+      // Vertical boundary also modulated by structure mask — tendrils reach higher
+      dustBoundary *= (0.5 + dustMask * 1.5);
       float dustZFade = smoothstep(dustBoundary, dustBoundary * 0.1, abs(gz));
       float dd = dustBase * dustZFade;
+
+      // Apply structure mask to dust density
+      dd *= (0.1 + dustMask * 0.9);
 
       // Filamentary dust clumping
       dd *= (0.2 + dustFractal * 1.8);
@@ -950,6 +975,8 @@ async function init() {
       uWarpStr:       { value: 1.0 },
       uDiskTaper:     { value: 3.0 },
       uDustRadTaper:  { value: 2.5 },
+      uDustLarge:     { value: 0.5 },
+      uDustFine:      { value: 0.5 },
     },
     side: THREE.BackSide,
     depthWrite: false,
@@ -1671,6 +1698,8 @@ function setupUI() {
     { id: 'dbg-bulge', uniform: 'uBulgeStr', log: false, suffix: '' },
     { id: 'dbg-dusttaper', uniform: 'uDiskTaper', log: false, suffix: '' },
     { id: 'dbg-dustradtaper', uniform: 'uDustRadTaper', log: false, suffix: '' },
+    { id: 'dbg-dustlarge', uniform: 'uDustLarge', log: false, suffix: '' },
+    { id: 'dbg-dustfine', uniform: 'uDustFine', log: false, suffix: '' },
     { id: 'dbg-warp', uniform: 'uWarpStr', log: false, suffix: '' },
   ];
 
@@ -1688,17 +1717,18 @@ function setupUI() {
 
   // MW Presets
   const mwPresets = {
-    'default':  { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 1.85, dustnoise: 2.45, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, warp: 1.0 },
-    'subtle':   { emission: -4.5, dust: -2.8, diskh: 800, dusth: 50, exposure: 0.8, noise: 1.0, dustnoise: 1.0, rift: 0.15, bulge: 0.5, dusttaper: 2.0, dustradtaper: 1.5, warp: 0.3 },
-    'dramatic': { emission: -4.0, dust: -2.6, diskh: 2970, dusth: 55, exposure: 1.5, noise: 1.65, dustnoise: 1.4, rift: 0.42, bulge: 2.7, dusttaper: 2.3, dustradtaper: 0.7, warp: 1.35 },
-    'clean':    { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 0.0, dustnoise: 0.0, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, warp: 0.0 },
+    'default':  { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 1.85, dustnoise: 2.45, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, dustlarge: 0.5, dustfine: 0.5, warp: 1.0, fov: 60 },
+    'subtle':   { emission: -4.5, dust: -2.8, diskh: 800, dusth: 50, exposure: 0.8, noise: 1.0, dustnoise: 1.0, rift: 0.15, bulge: 0.5, dusttaper: 2.0, dustradtaper: 1.5, dustlarge: 0.3, dustfine: 0.3, warp: 0.3, fov: 60 },
+    'dramatic': { emission: -4.0, dust: -2.6, diskh: 2970, dusth: 55, exposure: 1.5, noise: 1.65, dustnoise: 1.4, rift: 0.42, bulge: 2.7, dusttaper: 2.3, dustradtaper: 0.7, dustlarge: 0.5, dustfine: 0.5, warp: 1.35, fov: 120 },
+    'clean':    { emission: -4.25, dust: -2.4, diskh: 1420, dusth: 90, exposure: 1.0, noise: 0.0, dustnoise: 0.0, rift: 0.42, bulge: 1.15, dusttaper: 3.0, dustradtaper: 2.5, dustlarge: 0.0, dustfine: 0.0, warp: 0.0, fov: 60 },
   };
 
   // Map preset keys → slider IDs
   const presetKeyToSlider = {
     emission: 'dbg-emission', dust: 'dbg-dust', diskh: 'dbg-diskh', dusth: 'dbg-dusth',
     exposure: 'dbg-exposure', noise: 'dbg-noise', dustnoise: 'dbg-dustnoise',
-    rift: 'dbg-rift', bulge: 'dbg-bulge', dusttaper: 'dbg-dusttaper', dustradtaper: 'dbg-dustradtaper', warp: 'dbg-warp',
+    rift: 'dbg-rift', bulge: 'dbg-bulge', dusttaper: 'dbg-dusttaper', dustradtaper: 'dbg-dustradtaper',
+    dustlarge: 'dbg-dustlarge', dustfine: 'dbg-dustfine', warp: 'dbg-warp',
   };
 
   document.getElementById('dbg-preset').addEventListener('change', (e) => {
@@ -1708,6 +1738,12 @@ function setupUI() {
       const slider = document.getElementById(sliderId);
       slider.value = preset[key];
       slider.dispatchEvent(new Event('input')); // triggers uniform update + markDirty
+    }
+    // Apply FOV if preset includes it
+    if (preset.fov != null) {
+      const fovSlider = document.getElementById('fov-slider');
+      fovSlider.value = preset.fov;
+      fovSlider.dispatchEvent(new Event('input'));
     }
   });
 }

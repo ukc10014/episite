@@ -7,7 +7,7 @@ Personal site + Von Neumann probe star field simulator. Hosted on GitHub Pages.
 - `/index.html` — Main site (epistle/letter about AI existential risk)
 - `/app/` — Von Neumann probe simulator (Three.js WebGL app)
   - `index.html` — Simulator UI
-  - `renderer.js` — Core renderer, simulation, shaders (~830 lines)
+  - `renderer.js` — Core renderer, simulation, shaders (~1700 lines)
 - `/pipeline/process_hyg.py` — Downloads HYG star catalog, outputs binary + JSON
 - `/data/processed/` — Pipeline output: `stars.bin` (Float32Array), `metadata.json`, `landmarks.json`
 - `/data/raw/` — Raw downloads (not committed)

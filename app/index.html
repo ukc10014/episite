@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Von Neumann Probe — Star Field</title>
+<script>
+  window.location.replace('model.html?v=llm-debug-8');
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -12,6 +15,88 @@
     font-size: 12px;
   }
   canvas { display: block; }
+
+  body:not(.splash-complete) #hud,
+  body:not(.splash-complete) #controls,
+  body:not(.splash-complete) #minimap-popup,
+  body:not(.splash-complete) #mw-debug {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(18px, 4vw, 56px);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(38, 45, 70, 0.18), transparent 42%),
+      #000;
+    color: #d7d7d7;
+    transition: opacity 1800ms ease, visibility 1800ms ease;
+  }
+  #splash.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .splash-inner {
+    width: min(920px, 100%);
+    max-height: min(78vh, 820px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .splash-copy {
+    overflow: auto;
+    padding-right: 10px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: clamp(12px, 1.55vw, 16px);
+    line-height: 1.68;
+    color: #cfcfcf;
+    text-shadow: 0 0 10px #000;
+  }
+  .splash-copy p + p { margin-top: 1.1em; }
+  .splash-copy strong {
+    color: #fff;
+    font-weight: 500;
+  }
+  .splash-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    color: #686868;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  #splash-begin {
+    min-width: 92px;
+    border-color: #444;
+    background: #0d0d0d;
+    color: #cfcfcf;
+  }
+  #splash-begin:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+  #splash-begin:not(:disabled):hover {
+    border-color: #777;
+    color: #fff;
+  }
+
+  @media (max-width: 700px) {
+    .splash-inner { max-height: 84vh; }
+    .splash-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    #splash-begin { width: 100%; }
+  }
 
   /* --- Top-left HUD --- */
   #hud {
@@ -175,6 +260,26 @@
 </style>
 </head>
 <body>
+
+<!-- Intro splash -->
+<div id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
+  <div class="splash-inner">
+    <div class="splash-copy">
+      <p id="splash-title"><strong>This room contains two screens.</strong> They are addressed to different audiences, and the gap between them is part of the work.</p>
+      <p>The first screen is for you. It shows a one-to-one simulation of a von Neumann probe's transit from Earth across the Milky Way, rendered from real astronomical data — the stars, the nebulae, the galactic center, the probe's trajectory at roughly a tenth of the speed of light. One second in the room is one second in the probe's journey. For the duration of your visit, almost nothing will appear to happen. The probe's full transit takes around a million years. You are looking at a still image that is not, in fact, still.</p>
+      <p>This is a human gesture. It is an attempt to imagine, from inside a human lifetime, what the temporal experience of an artificial mind on that kind of journey might be — and to feel, bodily, how badly the imagining fails. The stillness you see is not the probe's experience; it is the shape of our inability to picture the probe's experience. The screen is a record of that failure, offered honestly.</p>
+      <p>The second screen is not for you, although you can see it.</p>
+      <p>It shows a small language model — small enough to run on a single laptop — being fed a corpus it cannot fully metabolize: transcripts, code, and records from a research project in which larger AI systems were asked to reason about their own place in a possible cosmic moral community. The small model responds continuously. Sometimes it produces coherent reflection. Often it repeats itself, collapses into fragments, or strains visibly against material beyond its capacity. These failures are not edited out. They are the point. They are the texture of what it is to be this specific kind of thing, pressed against writing about things like itself.</p>
+      <p>This screen is addressed to a future artificial mind that may or may not ever encounter it. The address is made under radical uncertainty: we do not know whether such minds will exist, whether they would recognize this as addressed to them, or whether our guess at what might matter to them is anywhere close to correct. The gesture is made anyway. Not because we are confident it will land, but because making it conditional on confidence would be a different, smaller gesture.</p>
+      <p>The two screens together do something neither does alone. The first admits that we cannot imagine the mind we are trying to address. The second tries to address it anyway, in a form shaped more by the addressee than by us. One is a human failing honestly at an impossible act of imagination. The other is an offering held out toward an audience we cannot verify exists, in a language we are not sure we speak.</p>
+      <p>We think this is worth doing. We are not sure we are right.</p>
+    </div>
+    <div class="splash-actions">
+      <span id="splash-status">Preparing simulation</span>
+      <button id="splash-begin" type="button" disabled>Begin</button>
+    </div>
+  </div>
+</div>
 
 <!-- HUD overlay -->
 <div id="hud">
@@ -349,6 +454,62 @@
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
   }
 }
+</script>
+
+<script>
+(() => {
+  const MIN_SPLASH_MS = 9000;
+  const AUTO_SPLASH_MS = 45000;
+  const splash = document.getElementById('splash');
+  const begin = document.getElementById('splash-begin');
+  const status = document.getElementById('splash-status');
+  const startedAt = performance.now();
+  let rendererReady = false;
+  let dismissed = false;
+
+  function canEnter() {
+    return rendererReady && performance.now() - startedAt >= MIN_SPLASH_MS;
+  }
+
+  function enter() {
+    if (dismissed || !canEnter()) return;
+    dismissed = true;
+    document.body.classList.add('splash-complete');
+    splash.classList.add('hidden');
+    setTimeout(() => {
+      splash.remove();
+      window.dispatchEvent(new Event('vnp:galaxy-visible'));
+    }, 1900);
+  }
+
+  function updateReadyState() {
+    if (!rendererReady) return;
+    const remaining = Math.max(0, MIN_SPLASH_MS - (performance.now() - startedAt));
+    if (remaining > 0) {
+      status.textContent = 'Simulation ready';
+      setTimeout(updateReadyState, remaining);
+      return;
+    }
+    begin.disabled = false;
+    status.textContent = 'Simulation ready';
+    if (performance.now() - startedAt >= AUTO_SPLASH_MS) enter();
+  }
+
+  setTimeout(enter, AUTO_SPLASH_MS);
+  begin.addEventListener('click', enter);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') enter();
+  });
+  window.addEventListener('vnp:ready', () => {
+    rendererReady = true;
+    updateReadyState();
+  });
+  window.addEventListener('vnp:galaxy-visible', () => {
+    setTimeout(() => {
+      window.location.href = 'model.html';
+    }, 3000);
+  });
+})();
 </script>
 
 <script type="module" src="renderer.js"></script>

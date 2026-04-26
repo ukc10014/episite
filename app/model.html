@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Small Model — Residual Stream</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+    color: #d8d8d8;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 1fr 44px;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      #020202;
+    background-size: 32px 32px;
+  }
+  #activation-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+  }
+  #activation-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+  #scanline {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.035),
+      rgba(255,255,255,0.035) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+    mix-blend-mode: screen;
+    opacity: 0.36;
+  }
+  #readout {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    display: grid;
+    gap: 4px;
+    color: #9a9a9a;
+    font-size: 11px;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px #000;
+  }
+  #readout .bright { color: #e6e6e6; }
+  #error {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 2;
+    max-width: min(760px, calc(100vw - 28px));
+    color: #ffb8b8;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-shadow: 0 0 8px #000;
+  }
+  #ticker {
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.92);
+  }
+  #ticker-content {
+    position: absolute;
+    right: 18px;
+    top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    max-width: calc(100vw - 36px);
+    height: 44px;
+    white-space: nowrap;
+    color: #f0f0f0;
+    font-size: 20px;
+    line-height: 44px;
+    text-shadow: 0 0 8px #000;
+  }
+  .token {
+    color: #bdbdbd;
+  }
+  .token.prev2 {
+    color: #ddc46c;
+  }
+  .token.prev1 {
+    color: #ffe58a;
+  }
+  .token.latest {
+    color: #fff15a;
+    text-shadow: 0 0 12px rgba(255, 238, 90, 0.75), 0 0 8px #000;
+  }
+</style>
+</head>
+<body>
+<main id="stage">
+  <section id="activation-wrap" aria-label="Residual stream activation visualization">
+    <canvas id="activation-canvas" width="576" height="30"></canvas>
+    <div id="scanline"></div>
+    <div id="readout">
+      <div>Runtime <span class="bright" id="runtime">starting</span></div>
+      <div>Frame <span class="bright" id="frame">0</span></div>
+      <div>Token <span class="bright" id="token">loading</span></div>
+      <div>Source <span class="bright" id="source">pending</span></div>
+    </div>
+    <div id="error"></div>
+  </section>
+  <section id="ticker" aria-live="polite">
+    <div id="ticker-content">Loading a small base model into this browser...</div>
+  </section>
+</main>
+
+<script type="module">
+const BUILD_ID = 'llm-debug-8';
+const canvas = document.getElementById('activation-canvas');
+const ctx = canvas.getContext('2d');
+const runtime = document.getElementById('runtime');
+const frame = document.getElementById('frame');
+const token = document.getElementById('token');
+const source = document.getElementById('source');
+const error = document.getElementById('error');
+const ticker = document.getElementById('ticker-content');
+
+let tokenPieces = [];
+
+const worker = new Worker(`model-worker.js?v=${BUILD_ID}`, { type: 'module' });
+
+function drawActivation(values, width, height) {
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  const image = ctx.createImageData(width, height);
+  for (let i = 0; i < width * height; i++) {
+    const v = Math.max(-1, Math.min(1, values[i] || 0));
+    const mag = Math.min(1, Math.abs(v));
+    const base = i * 4;
+    if (v >= 0) {
+      image.data[base] = 40 + mag * 215;
+      image.data[base + 1] = 44 + mag * 155;
+      image.data[base + 2] = 58 + mag * 80;
+    } else {
+      image.data[base] = 34 + mag * 60;
+      image.data[base + 1] = 54 + mag * 150;
+      image.data[base + 2] = 72 + mag * 183;
+    }
+    image.data[base + 3] = 255;
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+function appendTicker(text) {
+  tokenPieces.push(text);
+  if (tokenPieces.length > 140) tokenPieces = tokenPieces.slice(-140);
+
+  const visible = tokenPieces.slice();
+  while (visible.join('').length > 260 && visible.length > 8) visible.shift();
+
+  ticker.replaceChildren(...visible.map((piece, index) => {
+    const span = document.createElement('span');
+    const age = visible.length - 1 - index;
+    span.className = 'token' +
+      (age === 0 ? ' latest' : age === 1 ? ' prev1' : age === 2 ? ' prev2' : '');
+    span.textContent = piece;
+    return span;
+  }));
+}
+
+worker.addEventListener('message', ({ data }) => {
+  if (data.type === 'status') {
+    runtime.textContent = data.detail || data.message;
+  }
+  if (data.type === 'progress') {
+    runtime.textContent = `${data.message || 'loading'} ${Math.round(data.progress * 100)}%`;
+  }
+  if (data.type === 'ready') {
+    runtime.textContent = data.detail;
+  }
+  if (data.type === 'output') {
+    appendTicker(data.text);
+    token.textContent = data.text.slice(0, 48) || ' ';
+  }
+  if (data.type === 'activation') {
+    drawActivation(data.values, data.width, data.height);
+    frame.textContent = data.frame;
+    source.textContent = data.source;
+    if (data.token) token.textContent = data.token.slice(0, 48);
+  }
+  if (data.type === 'error') {
+    error.textContent = data.message;
+  }
+});
+
+worker.postMessage({ type: 'init' });
+</script>
+</body>
+</html>

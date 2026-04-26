@@ -1059,6 +1059,7 @@ async function init() {
 
   lastFrameTime = performance.now();
   animate();
+  window.dispatchEvent(new Event('vnp:ready'));
 }
 
 // ---------------------------------------------------------------------------

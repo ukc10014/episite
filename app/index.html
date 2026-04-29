@@ -144,9 +144,9 @@
     min-height: min(58vh, 620px);
     max-height: min(58vh, 620px);
     padding-right: 14px;
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: clamp(12px, 1.55vw, 16px);
-    line-height: 1.62;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: clamp(10px, 1.15vw, 13px);
+    line-height: 1.52;
     color: #cfcfcf;
     text-shadow: 0 0 10px #000;
     white-space: pre-wrap;
@@ -154,6 +154,10 @@
   }
   .splash-copy::-webkit-scrollbar {
     display: none;
+  }
+  .splash-heading {
+    font-weight: 700;
+    text-shadow: 0 0 12px currentColor, 0 0 10px #000;
   }
   .splash-progress {
     display: grid;
@@ -370,12 +374,37 @@
     position: absolute;
     inset: 0;
     display: grid;
-    grid-template-rows: 1fr 44px;
+    grid-template-rows: minmax(76px, 12vh) 1fr minmax(58px, 8vh);
     background:
       linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
       linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
       #020202;
     background-size: 32px 32px;
+  }
+  #context-strip,
+  #current-token-strip {
+    position: relative;
+    overflow: hidden;
+    background: rgba(0,0,0,0.92);
+    text-shadow: 0 0 8px #000;
+  }
+  #context-strip {
+    border-bottom: 1px solid rgba(255,255,255,0.14);
+  }
+  #context-content {
+    position: absolute;
+    right: 18px;
+    top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    max-width: calc(100vw - 36px);
+    height: 100%;
+    overflow: visible;
+    white-space: nowrap;
+    color: #b8dcff;
+    font-size: 18px;
+    line-height: 1;
   }
   #activation-wrap {
     position: relative;
@@ -430,26 +459,23 @@
     white-space: pre-wrap;
     text-shadow: 0 0 8px #000;
   }
-  #ticker {
+  #current-token-strip {
     position: relative;
     overflow: hidden;
     border-top: 1px solid rgba(255,255,255,0.16);
     background: rgba(0,0,0,0.92);
   }
-  #ticker-content {
+  #latest-token {
     position: absolute;
-    right: 18px;
-    top: 0;
-    display: inline-flex;
+    inset: 0 18px;
+    display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 0;
-    max-width: calc(100vw - 36px);
-    height: 44px;
+    justify-content: center;
+    overflow: hidden;
     white-space: nowrap;
-    color: #f0f0f0;
-    font-size: 20px;
-    line-height: 44px;
+    color: #b8dcff;
+    font-size: 18px;
+    line-height: 1;
     text-shadow: 0 0 8px #000;
   }
   .token {
@@ -657,6 +683,9 @@
 
 <section id="llm-screen" class="screen" aria-label="Small model residual stream activation viewer">
   <div id="llm-stage">
+    <section id="context-strip" aria-label="Generated text context">
+      <div id="context-content">Loading a small base model into this browser...</div>
+    </section>
     <section id="activation-wrap" aria-label="Residual stream activation visualization">
       <canvas id="activation-canvas" width="576" height="30"></canvas>
       <div id="scanline"></div>
@@ -668,8 +697,8 @@
       </div>
       <div id="error"></div>
     </section>
-    <section id="ticker" aria-live="polite">
-      <div id="ticker-content">Loading a small base model into this browser...</div>
+    <section id="current-token-strip" aria-live="polite" aria-label="Most recently generated token">
+      <div id="latest-token">...</div>
     </section>
   </div>
 </section>
@@ -767,13 +796,44 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
     maybeEnter();
   }
 
+  function mixRgb(start, end, amount) {
+    return start.map((channel, index) => Math.round(channel + (end[index] - channel) * amount));
+  }
+
+  function renderSplashCopy(markdown) {
+    splashCopy.replaceChildren();
+    const lines = markdown.split('\n');
+    const headingLines = lines
+      .map((line, index) => (/^#{1,3}\s+/.test(line) ? index : -1))
+      .filter(index => index >= 0);
+    const firstColor = [211, 238, 255];
+    const lastColor = [211, 238, 255];
+    let headingIndex = 0;
+
+    lines.forEach((line, index) => {
+      if (/^#{1,3}\s+/.test(line)) {
+        const amount = headingLines.length > 1 ? headingIndex / (headingLines.length - 1) : 0;
+        const color = mixRgb(firstColor, lastColor, amount);
+        const span = document.createElement('span');
+        span.className = 'splash-heading';
+        span.style.color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+        span.textContent = line;
+        splashCopy.append(span);
+        headingIndex += 1;
+      } else {
+        splashCopy.append(document.createTextNode(line));
+      }
+      if (index < lines.length - 1) splashCopy.append(document.createTextNode('\n'));
+    });
+  }
+
   async function loadSplashCopy() {
     try {
       const response = await fetch('../AGENTS.md', { cache: 'no-store' });
       if (!response.ok) throw new Error(`AGENTS.md fetch failed (${response.status})`);
-      splashCopy.textContent = await response.text();
+      renderSplashCopy(await response.text());
     } catch (error) {
-      splashCopy.textContent = `AGENTS.md unavailable\n\n${error.message || error}`;
+      renderSplashCopy(`AGENTS.md unavailable\n\n${error.message || error}`);
     }
     startSplashScroll();
   }

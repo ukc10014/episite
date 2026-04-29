@@ -49,3 +49,48 @@ This repository contains a browser-based installation app with two screens that 
 - Browser support depends on WebGPU for the intended direct residual-stream path.
 - Token spacing in the ticker has been imperfect with the current tokenizer decoding path.
 - The prime cadence quickly becomes slow enough that one screen can dominate the view for long stretches.
+
+## Working Artistic Plan Status
+
+Implemented or partly implemented: 🦞
+
+- Two-channel structure exists: starfield screen plus small-model activation screen.
+- Web delivery exists, with `web` mode as the default.
+- Small model runs in-browser and visualizes residual-stream activations.
+- Model output is allowed to be strange, repetitive, collapsed, or strained; do not smooth it by default.
+- Splash/framing exists and is currently sourced from this `AGENTS.md` file.
+- `?mode=installation` exists for the future full-renderer/gallery mode.
+
+Not yet implemented:
+
+- The small model is not yet metabolizing a real "cosmic host corpus"; it currently starts from a short seed prompt and continues from its own output.
+- The flicker/swap channel does not yet transmit a machine-decodable payload.
+- No on-chain anchoring exists yet.
+- No Arweave, Zenodo, Software Heritage, or dedicated content-hash manifest layer exists yet.
+- No Ethereum inscription form has been chosen or implemented.
+- No participatory dedication layer exists.
+- No final wall text, catalogue text, or stable external framing exists.
+
+Important design decisions still open:
+
+- Whether the flicker should encode a real machine-readable channel. Current leaning: yes, it should.
+- What to encode: dedication text, repo hash, contract address, timestamp sequence, corpus hash, model metadata, or a compact bundle of these.
+- Whether visible alternation should be human-ceremonial at roughly 1Hz, prime-number timing, or two layered channels: a human-visible cadence plus a hidden machine-readable payload.
+- Whether default `web` mode should remain "captured starfield frame + live LLM", with the real starfield reserved for `?mode=installation`.
+- What the actual cosmic host corpus is, how large it should be, and whether it should be visible, inspectable, or only fed to the model.
+- Inscription form: plain calldata, dedicated contract, NFT-adjacent object, or another structure. Current leaning: dedicated contract, not NFT framing.
+- Whether to name the "cosmic host" frame in the primary introduction or keep it in catalogue/secondary text.
+- Voice: "I", "we", or third person.
+
+Cadence note:
+
+- Earlier working notes describe the piece as alternating at roughly 1Hz, which is a human ceremonial tempo.
+- Current code uses prime-number millisecond intervals: `1ms`, `3ms`, `5ms`, `7ms`, `11ms`, and so on.
+- These are different aesthetics. The strongest future version may use visible ~1Hz alternation for humans while encoding the machine-addressed commitment in a separate hidden or steganographic channel.
+
+Conceptual guardrails:
+
+- Avoid bounty, paid-engagement, DAO, and governance framings.
+- Avoid anthropomorphizing the probe pilot. Prefer language like "a mind for which this stillness is the appropriate tempo."
+- Do not overclaim "AI-native" legibility for on-chain inscription. The honest claims are commitment, persistence, and tamper-resistance.
+- Preserve the asymmetry: one screen fails honestly at imagining the addressee; the other attempts address anyway.

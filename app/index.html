@@ -139,6 +139,14 @@
     flex-direction: column;
     gap: 18px;
   }
+  .splash-note {
+    color: #d3eeff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px #000;
+  }
   .splash-copy {
     overflow: auto;
     min-height: min(58vh, 620px);
@@ -498,6 +506,7 @@
 <!-- Intro splash -->
 <div id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
   <div class="splash-inner">
+    <div class="splash-note">Best viewed on desktop</div>
     <pre class="splash-copy" id="splash-title">Loading AGENTS.md...</pre>
     <div class="splash-progress">
       <div class="splash-progress-row">

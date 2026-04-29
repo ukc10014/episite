@@ -1,4 +1,4 @@
-const BUILD_ID = 'llm-splash-1';
+const BUILD_ID = 'llm-corpus-1';
 
 export function mountModelViewer(root, options = {}) {
   const canvas = root.querySelector('#activation-canvas');

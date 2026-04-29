@@ -45,10 +45,10 @@
   #galaxy-screen.fake-starfield::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: 0 0 -17vh 0;
     background:
       linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)),
-      url("static/starfield-frame.jpg") center center / cover no-repeat,
+      url("static/starfield-frame.jpg") center top / cover no-repeat,
       #010103;
     filter: saturate(0.95) contrast(1.02) brightness(0.86);
   }
@@ -150,6 +150,14 @@
 
   @media (max-width: 700px) {
     .splash-inner { max-height: 84vh; }
+    #galaxy-screen.fake-starfield::before {
+      inset: 0 0 -42vh 0;
+      background-size: auto 142%;
+      background-position: center top;
+    }
+    #galaxy-screen.fake-starfield::after {
+      display: none;
+    }
   }
 
   /* --- Top-left HUD --- */
@@ -632,7 +640,7 @@
 </script>
 
 <script type="module">
-import { mountModelViewer } from './model-viewer.js?v=splash-1';
+import { mountModelViewer } from './model-viewer.js?v=corpus-1';
 
 (() => {
   const galaxyScreen = document.getElementById('galaxy-screen');
@@ -652,7 +660,6 @@ import { mountModelViewer } from './model-viewer.js?v=splash-1';
   let activeScreen = 'galaxy';
   let swapTimer = 0;
   let scrollFrame = 0;
-  let scrollDirection = 1;
   let firstSwap = true;
   let primeCandidate = 3;
   const modelViewer = mountModelViewer(llmScreen, {
@@ -712,21 +719,25 @@ import { mountModelViewer } from './model-viewer.js?v=splash-1';
 
   function startSplashScroll() {
     cancelAnimationFrame(scrollFrame);
-    let last = performance.now();
+    splashCopy.scrollTop = 0;
+    const startDelayMs = 450;
+    const scrollSpeedPxPerSecond = 180;
+    let startedAt = 0;
     const tick = now => {
       const maxScroll = splashCopy.scrollHeight - splashCopy.clientHeight;
       if (maxScroll > 1) {
-        const dt = Math.min(now - last, 50);
-        splashCopy.scrollTop += scrollDirection * dt * 0.018;
-        if (splashCopy.scrollTop >= maxScroll) {
-          splashCopy.scrollTop = maxScroll;
-          scrollDirection = -1;
-        } else if (splashCopy.scrollTop <= 0) {
-          splashCopy.scrollTop = 0;
-          scrollDirection = 1;
+        if (!startedAt) startedAt = now + startDelayMs;
+        if (now >= startedAt) {
+          const elapsedSeconds = (now - startedAt) / 1000;
+          splashCopy.scrollTop = Math.min(maxScroll, elapsedSeconds * scrollSpeedPxPerSecond);
         }
+        if (splashCopy.scrollTop >= maxScroll - 0.5) {
+          splashCopy.scrollTop = maxScroll;
+          return;
+        }
+      } else {
+        startedAt = 0;
       }
-      last = now;
       scrollFrame = requestAnimationFrame(tick);
     };
     scrollFrame = requestAnimationFrame(tick);

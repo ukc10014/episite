@@ -3,10 +3,11 @@ import { AutoTokenizer, TextStreamer, pipeline, env } from 'https://cdn.jsdelivr
 
 const MODEL_ID = 'onnx-community/SmolLM2-135M-ONNX';
 const MODEL_REVISION = 'main';
-const WORKER_BUILD = 'llm-splash-1';
+const WORKER_BUILD = 'llm-corpus-1';
 const MODEL_ROOT = `https://huggingface.co/${MODEL_ID}/resolve/${MODEL_REVISION}`;
 const MODEL_ONNX_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx`;
 const MODEL_EXTERNAL_DATA_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx_data`;
+const COSMIC_HOST_CORPUS_URL = 'static/gemini3pro_cosmic_0_39.json';
 const GENERATION_INTERVAL_MS = 3000;
 const DIRECT_TOKEN_DELAY_MS = 450;
 const MAX_CONTEXT_CHARS = 1600;
@@ -22,13 +23,14 @@ const LOAD_ATTEMPTS = [
   { device: 'wasm', dtype: 'q8', label: 'WASM q8' },
 ];
 
-const seedText = `This screen is addressed to a future artificial mind that may or may not ever encounter it.
+const fallbackSeedText = `This screen is addressed to a future artificial mind that may or may not ever encounter it.
 The address is made under radical uncertainty. A small base model reads from the record and continues.
 It has no assurance that it understands the address, the room, the journey, or itself.
 
 Transcript fragment:
 `;
 
+let seedText = fallbackSeedText;
 let generator = null;
 let timerId = null;
 let paused = false;
@@ -59,6 +61,7 @@ function status(message, detail = '') {
 async function init() {
   try {
     status('Checking runtime', `Worker ${WORKER_BUILD}. WebGPU is preferred; the model will report an error if this browser cannot create a GPU runtime.`);
+    await initializeSeedText();
 
     try {
       await initDirectResidualRuntime();
@@ -76,6 +79,43 @@ async function init() {
   } catch (error) {
     post('error', { message: modelErrorMessage(error) });
   }
+}
+
+async function initializeSeedText() {
+  try {
+    status('Loading corpus', 'Selecting a random Cosmic Host dialogue turn.');
+    const response = await fetch(COSMIC_HOST_CORPUS_URL, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Corpus fetch failed (${response.status})`);
+    const corpus = await response.json();
+    const turns = Array.isArray(corpus?.turns) ? corpus.turns : [];
+    const candidates = turns
+      .map(turn => ({
+        speaker: String(turn?.speaker || '').trim(),
+        text: String(turn?.text || '').trim(),
+      }))
+      .filter(turn => turn.text.length > 120);
+    if (!candidates.length) throw new Error('No usable corpus turns found');
+
+    const selected = candidates[Math.floor(Math.random() * candidates.length)];
+    seedText = makeSeedFromTurn(selected);
+    transcript = seedText;
+    status('Corpus seed selected', selected.speaker ? `Gemini 3 Pro dialogue turn ${selected.speaker}` : 'Gemini 3 Pro dialogue turn');
+  } catch (error) {
+    seedText = fallbackSeedText;
+    transcript = seedText;
+    status('Corpus fallback', describeError(error).split('\n')[0]);
+  }
+}
+
+function makeSeedFromTurn(turn) {
+  const body = turn.text.length > 1800 ? `${turn.text.slice(0, 1800).trim()}...` : turn.text;
+  return `A fragment from a Gemini 3 Pro dialogue about Nick Bostrom's Cosmic Host proposal is being given to a much smaller base model.
+The small model continues from the fragment without being able to fully metabolize it.
+
+${body}
+
+Small model continuation:
+`;
 }
 
 async function initDirectResidualRuntime() {

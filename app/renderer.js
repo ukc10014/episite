@@ -136,6 +136,8 @@ const sim = {
 const probePos = new THREE.Vector3();
 const probeVelDir = new THREE.Vector3();
 let probeBeta = 0; // v/c
+let renderContainer = null;
+let renderPaused = true;
 
 function updateProbeState() {
   const probe = PROBES[sim.probeIndex];
@@ -844,6 +846,7 @@ const sailFragmentShader = /* glsl */ `
 // ---------------------------------------------------------------------------
 
 async function init() {
+  renderContainer = document.getElementById('galaxy-screen') || document.body;
   const status = document.getElementById('hud-stars');
   const setStatus = (msg) => { status.textContent = msg; };
 
@@ -918,14 +921,17 @@ async function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
-  camera = new THREE.PerspectiveCamera(sim.fov, window.innerWidth / window.innerHeight, 0.001, 500000);
+  const width = renderContainer.clientWidth || window.innerWidth;
+  const height = renderContainer.clientHeight || window.innerHeight;
+  camera = new THREE.PerspectiveCamera(sim.fov, width / height, 0.001, 500000);
   camera.up.set(0, 0, 1); // Galactic north (+z) is "up" so disk band appears horizontal
 
   webglRenderer = new THREE.WebGLRenderer({ antialias: false });
-  webglRenderer.setSize(window.innerWidth, window.innerHeight);
+  webglRenderer.setSize(width, height);
   webglRenderer.setPixelRatio(window.devicePixelRatio);
   webglRenderer.outputColorSpace = THREE.SRGBColorSpace;
-  document.body.appendChild(webglRenderer.domElement);
+  webglRenderer.domElement.classList.add('galaxy-webgl');
+  renderContainer.appendChild(webglRenderer.domElement);
 
   // --- Star particles ---
   const geometry = new THREE.BufferGeometry();
@@ -994,14 +1000,14 @@ async function init() {
   composer = new EffectComposer(webglRenderer);
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    new THREE.Vector2(width, height),
     BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESHOLD,
   ));
   composer.addPass(new OutputPass());
 
   // --- Solar sail (near-field scene) ---
   sailScene = new THREE.Scene();
-  sailCamera = new THREE.PerspectiveCamera(sim.fov, window.innerWidth / window.innerHeight, 1, 10000);
+  sailCamera = new THREE.PerspectiveCamera(sim.fov, width / height, 1, 10000);
 
   // Diamond sail: a flat plane, diamond shape carved in shader
   const sailGeo = new THREE.PlaneGeometry(SAIL_SIZE, SAIL_SIZE);
@@ -1036,12 +1042,13 @@ async function init() {
 
   // --- CSS2DRenderer for labels ---
   cssRenderer = new CSS2DRenderer();
-  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.setSize(width, height);
   cssRenderer.domElement.style.position = 'absolute';
   cssRenderer.domElement.style.top = '0';
   cssRenderer.domElement.style.left = '0';
   cssRenderer.domElement.style.pointerEvents = 'none';
-  document.body.appendChild(cssRenderer.domElement);
+  cssRenderer.domElement.classList.add('galaxy-labels');
+  renderContainer.appendChild(cssRenderer.domElement);
 
   // --- Overlays ---
   createOverlays();
@@ -1446,6 +1453,10 @@ function animate() {
   requestAnimationFrame(animate);
 
   const now = performance.now();
+  if (renderPaused) {
+    lastFrameTime = now;
+    return;
+  }
   const dt = Math.min((now - lastFrameTime) / 1000, 0.1); // seconds, capped
   lastFrameTime = now;
 
@@ -1754,8 +1765,8 @@ function setupUI() {
 // ---------------------------------------------------------------------------
 
 function onResize() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const w = renderContainer?.clientWidth || window.innerWidth;
+  const h = renderContainer?.clientHeight || window.innerHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   sailCamera.aspect = w / h;
@@ -1774,3 +1785,14 @@ init().catch(err => {
   console.error('[VNP] Init failed:', err);
   document.getElementById('hud-stars').textContent = 'ERROR — see console';
 });
+
+window.vnpGalaxy = {
+  pause() {
+    renderPaused = true;
+  },
+  resume() {
+    renderPaused = false;
+    onResize();
+    markDirty();
+  },
+};

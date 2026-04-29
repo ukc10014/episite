@@ -3,7 +3,7 @@ import { AutoTokenizer, TextStreamer, pipeline, env } from 'https://cdn.jsdelivr
 
 const MODEL_ID = 'onnx-community/SmolLM2-135M-ONNX';
 const MODEL_REVISION = 'main';
-const WORKER_BUILD = 'llm-debug-8';
+const WORKER_BUILD = 'llm-swap-1';
 const MODEL_ROOT = `https://huggingface.co/${MODEL_ID}/resolve/${MODEL_REVISION}`;
 const MODEL_ONNX_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx`;
 const MODEL_EXTERNAL_DATA_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx_data`;
@@ -71,7 +71,7 @@ async function init() {
 
     generator = await loadGenerator();
     post('ready', { detail: `${MODEL_ID} · ${generator.runtimeLabel}` });
-    await generateOnce();
+    if (!paused) await generateOnce();
     scheduleNext();
   } catch (error) {
     post('error', { message: modelErrorMessage(error) });
@@ -109,6 +109,10 @@ async function initDirectResidualRuntime() {
 
 async function directGenerateLoop() {
   while (true) {
+    if (paused) {
+      await delay(100);
+      continue;
+    }
     const outputToken = await directGenerateStep();
     if (outputToken) {
       post('output', { text: outputToken });
@@ -610,7 +614,7 @@ self.addEventListener('message', ({ data }) => {
   }
   if (data.type === 'resume') {
     paused = false;
-    scheduleNext();
+    if (generator) scheduleNext();
   }
   if (data.type === 'step') generateOnce();
   if (data.type === 'sampleTensor') sampleTensor(data.name);

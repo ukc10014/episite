@@ -3,18 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>Von Neumann Probe — Star Field</title>
-<script>
-  window.location.replace('model.html?v=llm-debug-8');
-</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
+    width: 100vw; height: 100vh;
     background: #000; overflow: hidden;
     color: #ccc; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
     font-size: 12px;
   }
   canvas { display: block; }
+
+  #app-shell,
+  .screen {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #000;
+  }
+  .screen {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .screen.active {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  #galaxy-screen {
+    z-index: 1;
+  }
+  #llm-screen {
+    z-index: 2;
+    color: #d8d8d8;
+  }
+  .galaxy-webgl,
+  .galaxy-labels {
+    position: absolute;
+    inset: 0;
+  }
 
   body:not(.splash-complete) #hud,
   body:not(.splash-complete) #controls,
@@ -257,6 +284,107 @@
   .dbg-row .dbg-val {
     color: #aaa; font-size: 10px; min-width: 55px; text-align: left;
   }
+
+  /* --- LLM activation screen --- */
+  #llm-stage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 1fr 44px;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      #020202;
+    background-size: 32px 32px;
+  }
+  #activation-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+  }
+  #activation-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+  #scanline {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.035),
+      rgba(255,255,255,0.035) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+    mix-blend-mode: screen;
+    opacity: 0.36;
+  }
+  #llm-readout {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    display: grid;
+    gap: 4px;
+    color: #9a9a9a;
+    font-size: 11px;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px #000;
+  }
+  #llm-readout .bright { color: #e6e6e6; }
+  #error {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 2;
+    max-width: min(760px, calc(100vw - 28px));
+    color: #ffb8b8;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-shadow: 0 0 8px #000;
+  }
+  #ticker {
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.92);
+  }
+  #ticker-content {
+    position: absolute;
+    right: 18px;
+    top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    max-width: calc(100vw - 36px);
+    height: 44px;
+    white-space: nowrap;
+    color: #f0f0f0;
+    font-size: 20px;
+    line-height: 44px;
+    text-shadow: 0 0 8px #000;
+  }
+  .token {
+    color: #bdbdbd;
+  }
+  .token.prev2 {
+    color: #ddc46c;
+  }
+  .token.prev1 {
+    color: #ffe58a;
+  }
+  .token.latest {
+    color: #fff15a;
+    text-shadow: 0 0 12px rgba(255, 238, 90, 0.75), 0 0 8px #000;
+  }
 </style>
 </head>
 <body>
@@ -280,6 +408,9 @@
     </div>
   </div>
 </div>
+
+<main id="app-shell">
+<section id="galaxy-screen" class="screen active" aria-label="Von Neumann probe starfield simulator">
 
 <!-- HUD overlay -->
 <div id="hud">
@@ -446,6 +577,27 @@
     <div><span class="label">Distance from Sol:</span> <span class="val" id="rd-dist">0</span> <span class="label">ly</span></div>
   </div>
 </div>
+</section>
+
+<section id="llm-screen" class="screen" aria-label="Small model residual stream activation viewer">
+  <div id="llm-stage">
+    <section id="activation-wrap" aria-label="Residual stream activation visualization">
+      <canvas id="activation-canvas" width="576" height="30"></canvas>
+      <div id="scanline"></div>
+      <div id="llm-readout">
+        <div>Runtime <span class="bright" id="runtime">starting</span></div>
+        <div>Frame <span class="bright" id="frame">0</span></div>
+        <div>Token <span class="bright" id="token">loading</span></div>
+        <div>Source <span class="bright" id="source">pending</span></div>
+      </div>
+      <div id="error"></div>
+    </section>
+    <section id="ticker" aria-live="polite">
+      <div id="ticker-content">Loading a small base model into this browser...</div>
+    </section>
+  </div>
+</section>
+</main>
 
 <script type="importmap">
 {
@@ -456,16 +608,77 @@
 }
 </script>
 
-<script>
+<script type="module">
+import { mountModelViewer } from './model-viewer.js?v=swap-1';
+
 (() => {
   const MIN_SPLASH_MS = 9000;
   const AUTO_SPLASH_MS = 45000;
+  const galaxyScreen = document.getElementById('galaxy-screen');
+  const llmScreen = document.getElementById('llm-screen');
   const splash = document.getElementById('splash');
   const begin = document.getElementById('splash-begin');
   const status = document.getElementById('splash-status');
+  const modelViewer = mountModelViewer(llmScreen);
   const startedAt = performance.now();
   let rendererReady = false;
   let dismissed = false;
+  let activeScreen = 'galaxy';
+  let swapTimer = 0;
+  let firstSwap = true;
+  let primeCandidate = 3;
+
+  modelViewer.pause();
+
+  function isPrime(value) {
+    if (value < 2) return false;
+    if (value === 2) return true;
+    if (value % 2 === 0) return false;
+    for (let factor = 3; factor * factor <= value; factor += 2) {
+      if (value % factor === 0) return false;
+    }
+    return true;
+  }
+
+  function nextPrimeIntervalMs() {
+    if (firstSwap) {
+      firstSwap = false;
+      return 1;
+    }
+    while (!isPrime(primeCandidate)) primeCandidate += 2;
+    const interval = primeCandidate;
+    primeCandidate += 2;
+    return interval;
+  }
+
+  function setActiveScreen(next) {
+    activeScreen = next;
+    galaxyScreen.classList.toggle('active', next === 'galaxy');
+    llmScreen.classList.toggle('active', next === 'llm');
+
+    if (next === 'galaxy') {
+      modelViewer.pause();
+      window.vnpGalaxy?.resume();
+    } else {
+      window.vnpGalaxy?.pause();
+      modelViewer.resume();
+    }
+  }
+
+  function schedulePrimeSwap() {
+    clearTimeout(swapTimer);
+    swapTimer = setTimeout(() => {
+      setActiveScreen(activeScreen === 'galaxy' ? 'llm' : 'galaxy');
+      schedulePrimeSwap();
+    }, nextPrimeIntervalMs());
+  }
+
+  function startPrimeCadence() {
+    firstSwap = true;
+    primeCandidate = 3;
+    setActiveScreen('galaxy');
+    schedulePrimeSwap();
+  }
 
   function canEnter() {
     return rendererReady && performance.now() - startedAt >= MIN_SPLASH_MS;
@@ -479,6 +692,7 @@
     setTimeout(() => {
       splash.remove();
       window.dispatchEvent(new Event('vnp:galaxy-visible'));
+      startPrimeCadence();
     }, 1900);
   }
 
@@ -504,15 +718,10 @@
     rendererReady = true;
     updateReadyState();
   });
-  window.addEventListener('vnp:galaxy-visible', () => {
-    setTimeout(() => {
-      window.location.href = 'model.html';
-    }, 3000);
-  });
 })();
 </script>
 
-<script type="module" src="renderer.js"></script>
+<script type="module" src="renderer.js?v=swap-1"></script>
 
 </body>
 </html>

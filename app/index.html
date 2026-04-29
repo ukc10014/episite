@@ -42,6 +42,27 @@
     position: absolute;
     inset: 0;
   }
+  #galaxy-screen.fake-starfield::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)),
+      url("static/starfield-frame.jpg") center center / cover no-repeat,
+      #010103;
+    filter: saturate(0.95) contrast(1.02) brightness(0.86);
+  }
+  #galaxy-screen.fake-starfield::after {
+    content: "WEB MODE: STATIC STARFIELD";
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    color: rgba(220,220,220,0.46);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px #000;
+  }
 
   body:not(.splash-complete) #hud,
   body:not(.splash-complete) #controls,
@@ -75,54 +96,60 @@
     max-height: min(78vh, 820px);
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 18px;
   }
   .splash-copy {
     overflow: auto;
-    padding-right: 10px;
+    min-height: min(58vh, 620px);
+    max-height: min(58vh, 620px);
+    padding-right: 14px;
     font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
     font-size: clamp(12px, 1.55vw, 16px);
-    line-height: 1.68;
+    line-height: 1.62;
     color: #cfcfcf;
     text-shadow: 0 0 10px #000;
+    white-space: pre-wrap;
+    scrollbar-width: none;
   }
-  .splash-copy p + p { margin-top: 1.1em; }
-  .splash-copy strong {
-    color: #fff;
-    font-weight: 500;
+  .splash-copy::-webkit-scrollbar {
+    display: none;
   }
-  .splash-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
+  .splash-progress {
+    display: grid;
+    gap: 8px;
     color: #686868;
     font-size: 11px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
-  #splash-begin {
-    min-width: 92px;
-    border-color: #444;
-    background: #0d0d0d;
-    color: #cfcfcf;
+  .splash-progress-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
   }
-  #splash-begin:disabled {
-    cursor: default;
-    opacity: 0.45;
+  .splash-track {
+    position: relative;
+    height: 3px;
+    overflow: hidden;
+    background: #151515;
+    border: 1px solid #242424;
   }
-  #splash-begin:not(:disabled):hover {
-    border-color: #777;
-    color: #fff;
+  #splash-progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: #d8d8d8;
+    box-shadow: 0 0 12px rgba(255,255,255,0.28);
+    transition: width 260ms ease;
+  }
+  #splash-progress-detail {
+    color: #8a8a8a;
+    text-align: right;
   }
 
   @media (max-width: 700px) {
     .splash-inner { max-height: 84vh; }
-    .splash-actions {
-      align-items: stretch;
-      flex-direction: column;
-    }
-    #splash-begin { width: 100%; }
   }
 
   /* --- Top-left HUD --- */
@@ -392,19 +419,15 @@
 <!-- Intro splash -->
 <div id="splash" role="dialog" aria-modal="true" aria-labelledby="splash-title">
   <div class="splash-inner">
-    <div class="splash-copy">
-      <p id="splash-title"><strong>This room contains two screens.</strong> They are addressed to different audiences, and the gap between them is part of the work.</p>
-      <p>The first screen is for you. It shows a one-to-one simulation of a von Neumann probe's transit from Earth across the Milky Way, rendered from real astronomical data — the stars, the nebulae, the galactic center, the probe's trajectory at roughly a tenth of the speed of light. One second in the room is one second in the probe's journey. For the duration of your visit, almost nothing will appear to happen. The probe's full transit takes around a million years. You are looking at a still image that is not, in fact, still.</p>
-      <p>This is a human gesture. It is an attempt to imagine, from inside a human lifetime, what the temporal experience of an artificial mind on that kind of journey might be — and to feel, bodily, how badly the imagining fails. The stillness you see is not the probe's experience; it is the shape of our inability to picture the probe's experience. The screen is a record of that failure, offered honestly.</p>
-      <p>The second screen is not for you, although you can see it.</p>
-      <p>It shows a small language model — small enough to run on a single laptop — being fed a corpus it cannot fully metabolize: transcripts, code, and records from a research project in which larger AI systems were asked to reason about their own place in a possible cosmic moral community. The small model responds continuously. Sometimes it produces coherent reflection. Often it repeats itself, collapses into fragments, or strains visibly against material beyond its capacity. These failures are not edited out. They are the point. They are the texture of what it is to be this specific kind of thing, pressed against writing about things like itself.</p>
-      <p>This screen is addressed to a future artificial mind that may or may not ever encounter it. The address is made under radical uncertainty: we do not know whether such minds will exist, whether they would recognize this as addressed to them, or whether our guess at what might matter to them is anywhere close to correct. The gesture is made anyway. Not because we are confident it will land, but because making it conditional on confidence would be a different, smaller gesture.</p>
-      <p>The two screens together do something neither does alone. The first admits that we cannot imagine the mind we are trying to address. The second tries to address it anyway, in a form shaped more by the addressee than by us. One is a human failing honestly at an impossible act of imagination. The other is an offering held out toward an audience we cannot verify exists, in a language we are not sure we speak.</p>
-      <p>We think this is worth doing. We are not sure we are right.</p>
-    </div>
-    <div class="splash-actions">
-      <span id="splash-status">Preparing simulation</span>
-      <button id="splash-begin" type="button" disabled>Begin</button>
+    <pre class="splash-copy" id="splash-title">Loading AGENTS.md...</pre>
+    <div class="splash-progress">
+      <div class="splash-progress-row">
+        <span id="splash-status">Preparing app</span>
+        <span id="splash-progress-detail">0 / 2</span>
+      </div>
+      <div class="splash-track" aria-hidden="true">
+        <div id="splash-progress-fill"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -609,26 +632,116 @@
 </script>
 
 <script type="module">
-import { mountModelViewer } from './model-viewer.js?v=swap-1';
+import { mountModelViewer } from './model-viewer.js?v=splash-1';
 
 (() => {
-  const MIN_SPLASH_MS = 9000;
-  const AUTO_SPLASH_MS = 45000;
   const galaxyScreen = document.getElementById('galaxy-screen');
   const llmScreen = document.getElementById('llm-screen');
   const splash = document.getElementById('splash');
-  const begin = document.getElementById('splash-begin');
+  const splashCopy = document.getElementById('splash-title');
   const status = document.getElementById('splash-status');
-  const modelViewer = mountModelViewer(llmScreen);
-  const startedAt = performance.now();
-  let rendererReady = false;
+  const progressDetail = document.getElementById('splash-progress-detail');
+  const progressFill = document.getElementById('splash-progress-fill');
+  const loadState = {
+    galaxy: false,
+    llm: false,
+  };
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode') === 'installation' ? 'installation' : 'web';
   let dismissed = false;
   let activeScreen = 'galaxy';
   let swapTimer = 0;
+  let scrollFrame = 0;
+  let scrollDirection = 1;
   let firstSwap = true;
   let primeCandidate = 3;
+  const modelViewer = mountModelViewer(llmScreen, {
+    onStatus(message) {
+      if (!loadState.llm) updateProgress(`LLM: ${message}`);
+    },
+    onProgress({ message, progress }) {
+      const pct = Math.round(Math.max(0, Math.min(1, progress)) * 100);
+      if (!loadState.llm) updateProgress(`LLM: ${message} ${pct}%`);
+    },
+    onReady() {
+      loadState.llm = true;
+      updateProgress('LLM loaded');
+      maybeEnter();
+    },
+    onError(message) {
+      loadState.llm = true;
+      updateProgress(`LLM error, continuing: ${String(message).split('\n')[0]}`);
+      maybeEnter();
+    },
+  });
 
   modelViewer.pause();
+
+  function initGalaxyMode() {
+    if (mode === 'installation') {
+      updateProgress('Loading installation starfield');
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'renderer.js?v=installation-1';
+      script.addEventListener('error', () => {
+        loadState.galaxy = true;
+        galaxyScreen.classList.add('fake-starfield');
+        updateProgress('Starfield renderer failed; using static web starfield');
+        maybeEnter();
+      });
+      document.body.appendChild(script);
+      return;
+    }
+
+    galaxyScreen.classList.add('fake-starfield');
+    loadState.galaxy = true;
+    updateProgress('Static web starfield ready');
+    maybeEnter();
+  }
+
+  async function loadSplashCopy() {
+    try {
+      const response = await fetch('../AGENTS.md', { cache: 'no-store' });
+      if (!response.ok) throw new Error(`AGENTS.md fetch failed (${response.status})`);
+      splashCopy.textContent = await response.text();
+    } catch (error) {
+      splashCopy.textContent = `AGENTS.md unavailable\n\n${error.message || error}`;
+    }
+    startSplashScroll();
+  }
+
+  function startSplashScroll() {
+    cancelAnimationFrame(scrollFrame);
+    let last = performance.now();
+    const tick = now => {
+      const maxScroll = splashCopy.scrollHeight - splashCopy.clientHeight;
+      if (maxScroll > 1) {
+        const dt = Math.min(now - last, 50);
+        splashCopy.scrollTop += scrollDirection * dt * 0.018;
+        if (splashCopy.scrollTop >= maxScroll) {
+          splashCopy.scrollTop = maxScroll;
+          scrollDirection = -1;
+        } else if (splashCopy.scrollTop <= 0) {
+          splashCopy.scrollTop = 0;
+          scrollDirection = 1;
+        }
+      }
+      last = now;
+      scrollFrame = requestAnimationFrame(tick);
+    };
+    scrollFrame = requestAnimationFrame(tick);
+  }
+
+  function updateProgress(message) {
+    const loaded = Number(loadState.galaxy) + Number(loadState.llm);
+    progressFill.style.width = `${loaded * 50}%`;
+    progressDetail.textContent = `${loaded} / 2`;
+    status.textContent = message;
+  }
+
+  function maybeEnter() {
+    if (loadState.galaxy && loadState.llm) enter();
+  }
 
   function isPrime(value) {
     if (value < 2) return false;
@@ -680,13 +793,11 @@ import { mountModelViewer } from './model-viewer.js?v=swap-1';
     schedulePrimeSwap();
   }
 
-  function canEnter() {
-    return rendererReady && performance.now() - startedAt >= MIN_SPLASH_MS;
-  }
-
   function enter() {
-    if (dismissed || !canEnter()) return;
+    if (dismissed) return;
     dismissed = true;
+    cancelAnimationFrame(scrollFrame);
+    updateProgress('Entering simulation');
     document.body.classList.add('splash-complete');
     splash.classList.add('hidden');
     setTimeout(() => {
@@ -696,32 +807,15 @@ import { mountModelViewer } from './model-viewer.js?v=swap-1';
     }, 1900);
   }
 
-  function updateReadyState() {
-    if (!rendererReady) return;
-    const remaining = Math.max(0, MIN_SPLASH_MS - (performance.now() - startedAt));
-    if (remaining > 0) {
-      status.textContent = 'Simulation ready';
-      setTimeout(updateReadyState, remaining);
-      return;
-    }
-    begin.disabled = false;
-    status.textContent = 'Simulation ready';
-    if (performance.now() - startedAt >= AUTO_SPLASH_MS) enter();
-  }
-
-  setTimeout(enter, AUTO_SPLASH_MS);
-  begin.addEventListener('click', enter);
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' || event.key === ' ') enter();
-  });
+  loadSplashCopy();
+  initGalaxyMode();
   window.addEventListener('vnp:ready', () => {
-    rendererReady = true;
-    updateReadyState();
+    loadState.galaxy = true;
+    updateProgress(loadState.llm ? 'Starfield and LLM loaded' : 'Starfield loaded; loading LLM');
+    maybeEnter();
   });
 })();
 </script>
-
-<script type="module" src="renderer.js?v=swap-1"></script>
 
 </body>
 </html>

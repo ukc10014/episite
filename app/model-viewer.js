@@ -1,6 +1,6 @@
-const BUILD_ID = 'llm-swap-1';
+const BUILD_ID = 'llm-splash-1';
 
-export function mountModelViewer(root) {
+export function mountModelViewer(root, options = {}) {
   const canvas = root.querySelector('#activation-canvas');
   const ctx = canvas.getContext('2d');
   const runtime = root.querySelector('#runtime');
@@ -58,12 +58,18 @@ export function mountModelViewer(root) {
   worker.addEventListener('message', ({ data }) => {
     if (data.type === 'status') {
       runtime.textContent = data.detail || data.message;
+      options.onStatus?.(data.detail || data.message || 'Loading model');
     }
     if (data.type === 'progress') {
       runtime.textContent = `${data.message || 'loading'} ${Math.round(data.progress * 100)}%`;
+      options.onProgress?.({
+        message: data.message || 'Loading model',
+        progress: data.progress || 0,
+      });
     }
     if (data.type === 'ready') {
       runtime.textContent = data.detail;
+      options.onReady?.(data.detail);
     }
     if (data.type === 'output') {
       appendTicker(data.text);
@@ -77,6 +83,7 @@ export function mountModelViewer(root) {
     }
     if (data.type === 'error') {
       error.textContent = data.message;
+      options.onError?.(data.message);
     }
   });
 

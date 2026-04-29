@@ -3,7 +3,7 @@ import { AutoTokenizer, TextStreamer, pipeline, env } from 'https://cdn.jsdelivr
 
 const MODEL_ID = 'onnx-community/SmolLM2-135M-ONNX';
 const MODEL_REVISION = 'main';
-const WORKER_BUILD = 'llm-swap-1';
+const WORKER_BUILD = 'llm-splash-1';
 const MODEL_ROOT = `https://huggingface.co/${MODEL_ID}/resolve/${MODEL_REVISION}`;
 const MODEL_ONNX_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx`;
 const MODEL_EXTERNAL_DATA_URL = `${MODEL_ROOT}/onnx/model_q4f16.onnx_data`;

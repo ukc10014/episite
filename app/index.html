@@ -737,6 +737,8 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   let activeScreen = 'galaxy';
   let swapTimer = 0;
   let scrollFrame = 0;
+  let scrollTimer = 0;
+  let scrollFallbackTimer = 0;
   let llmGraceTimer = 0;
   let firstSwap = true;
   let primeCandidate = 3;
@@ -853,11 +855,27 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
 
   function startSplashScroll() {
     cancelAnimationFrame(scrollFrame);
+    clearInterval(scrollTimer);
+    clearTimeout(scrollFallbackTimer);
     splashCopy.scrollTop = 0;
     const startDelayMs = 450;
     const scrollSpeedPxPerSecond = 720;
     let startedAt = 0;
+    let finished = false;
+
+    const finishScroll = () => {
+      if (finished) return;
+      finished = true;
+      cancelAnimationFrame(scrollFrame);
+      clearInterval(scrollTimer);
+      clearTimeout(scrollFallbackTimer);
+      splashCopy.scrollTop = Math.max(0, splashCopy.scrollHeight - splashCopy.clientHeight);
+      loadState.splashScrolled = true;
+      maybeEnter();
+    };
+
     const tick = now => {
+      if (finished) return;
       const maxScroll = splashCopy.scrollHeight - splashCopy.clientHeight;
       if (maxScroll > 1) {
         if (!startedAt) startedAt = now + startDelayMs;
@@ -867,18 +885,19 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
         }
         if (splashCopy.scrollTop >= maxScroll - 0.5) {
           splashCopy.scrollTop = maxScroll;
-          loadState.splashScrolled = true;
-          maybeEnter();
+          finishScroll();
           return;
         }
       } else {
         startedAt = 0;
-        loadState.splashScrolled = true;
-        maybeEnter();
+        finishScroll();
         return;
       }
       scrollFrame = requestAnimationFrame(tick);
     };
+
+    scrollTimer = setInterval(() => tick(performance.now()), 50);
+    scrollFallbackTimer = setTimeout(finishScroll, 20000);
     scrollFrame = requestAnimationFrame(tick);
   }
 
@@ -947,6 +966,8 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
     if (dismissed) return;
     dismissed = true;
     cancelAnimationFrame(scrollFrame);
+    clearInterval(scrollTimer);
+    clearTimeout(scrollFallbackTimer);
     updateProgress('Entering simulation');
     document.body.classList.add('splash-complete');
     splash.classList.add('hidden');

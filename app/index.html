@@ -37,6 +37,47 @@
     z-index: 2;
     color: #d8d8d8;
   }
+  #lobster-watermark {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    --lobster-x: 0px;
+    --lobster-y: 0px;
+    z-index: 80;
+    width: clamp(110px, 14vw, 220px);
+    aspect-ratio: 271.5 / 724;
+    pointer-events: none;
+    opacity: 0.2;
+    mix-blend-mode: normal;
+    background-color: #2a0507;
+    mask-image: url("static/lobster-sprite-alpha.png");
+    -webkit-mask-image: url("static/lobster-sprite-alpha.png");
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-size: 800% 100%;
+    -webkit-mask-size: 800% 100%;
+    mask-position: 0 0;
+    -webkit-mask-position: 0 0;
+    background-repeat: no-repeat;
+    background-size: 800% 100%;
+    background-position: 0 0;
+    animation: lobster-wave 1.15s steps(7) infinite;
+    transform: translate(
+      calc(-50% + var(--lobster-x)),
+      calc(-50% + var(--lobster-y))
+    ) translateZ(0);
+    transition: transform 1400ms ease-in-out;
+  }
+  @keyframes lobster-wave {
+    from {
+      mask-position: 0 0;
+      -webkit-mask-position: 0 0;
+    }
+    to {
+      mask-position: 100% 0;
+      -webkit-mask-position: 100% 0;
+    }
+  }
   .galaxy-webgl,
   .galaxy-labels {
     position: absolute;
@@ -157,6 +198,10 @@
     }
     #galaxy-screen.fake-starfield::after {
       display: none;
+    }
+    #lobster-watermark {
+      width: 96px;
+      opacity: 0.2;
     }
   }
 
@@ -629,6 +674,7 @@
   </div>
 </section>
 </main>
+<div id="lobster-watermark" aria-hidden="true"></div>
 
 <script type="importmap">
 {
@@ -650,9 +696,11 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   const status = document.getElementById('splash-status');
   const progressDetail = document.getElementById('splash-progress-detail');
   const progressFill = document.getElementById('splash-progress-fill');
+  const lobsterWatermark = document.getElementById('lobster-watermark');
   const loadState = {
     galaxy: false,
     llm: false,
+    splashScrolled: false,
   };
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode') === 'installation' ? 'installation' : 'web';
@@ -683,6 +731,19 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   });
 
   modelViewer.pause();
+
+  function startLobsterDrift() {
+    if (!lobsterWatermark) return;
+    const range = 25;
+    const drift = () => {
+      const x = (Math.random() * 2 - 1) * range;
+      const y = (Math.random() * 2 - 1) * range;
+      lobsterWatermark.style.setProperty('--lobster-x', `${x.toFixed(1)}px`);
+      lobsterWatermark.style.setProperty('--lobster-y', `${y.toFixed(1)}px`);
+    };
+    drift();
+    window.setInterval(drift, 2200);
+  }
 
   function initGalaxyMode() {
     if (mode === 'installation') {
@@ -721,7 +782,7 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
     cancelAnimationFrame(scrollFrame);
     splashCopy.scrollTop = 0;
     const startDelayMs = 450;
-    const scrollSpeedPxPerSecond = 180;
+    const scrollSpeedPxPerSecond = 720;
     let startedAt = 0;
     const tick = now => {
       const maxScroll = splashCopy.scrollHeight - splashCopy.clientHeight;
@@ -733,10 +794,15 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
         }
         if (splashCopy.scrollTop >= maxScroll - 0.5) {
           splashCopy.scrollTop = maxScroll;
+          loadState.splashScrolled = true;
+          maybeEnter();
           return;
         }
       } else {
         startedAt = 0;
+        loadState.splashScrolled = true;
+        maybeEnter();
+        return;
       }
       scrollFrame = requestAnimationFrame(tick);
     };
@@ -751,7 +817,7 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   }
 
   function maybeEnter() {
-    if (loadState.galaxy && loadState.llm) enter();
+    if (loadState.galaxy && loadState.llm && loadState.splashScrolled) enter();
   }
 
   function isPrime(value) {
@@ -819,6 +885,7 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   }
 
   loadSplashCopy();
+  startLobsterDrift();
   initGalaxyMode();
   window.addEventListener('vnp:ready', () => {
     loadState.galaxy = true;

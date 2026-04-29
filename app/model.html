@@ -254,6 +254,12 @@ worker.addEventListener('message', ({ data }) => {
     error.textContent = data.message;
   }
 });
+worker.addEventListener('error', event => {
+  error.textContent = event.message || 'Model worker failed before it could report status';
+});
+worker.addEventListener('messageerror', () => {
+  error.textContent = 'Model worker sent an unreadable message';
+});
 
 worker.postMessage({ type: 'init' });
 </script>

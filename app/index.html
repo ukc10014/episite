@@ -737,6 +737,7 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   let activeScreen = 'galaxy';
   let swapTimer = 0;
   let scrollFrame = 0;
+  let llmGraceTimer = 0;
   let firstSwap = true;
   let primeCandidate = 3;
   const modelViewer = mountModelViewer(llmScreen, {
@@ -749,17 +750,29 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
     },
     onReady() {
       loadState.llm = true;
+      clearTimeout(llmGraceTimer);
       updateProgress('LLM loaded');
       maybeEnter();
     },
     onError(message) {
       loadState.llm = true;
+      clearTimeout(llmGraceTimer);
       updateProgress(`LLM error, continuing: ${String(message).split('\n')[0]}`);
       maybeEnter();
     },
   });
 
   modelViewer.pause();
+
+  function startLlmGraceTimer() {
+    clearTimeout(llmGraceTimer);
+    llmGraceTimer = setTimeout(() => {
+      if (loadState.llm) return;
+      loadState.llm = true;
+      updateProgress('LLM still loading; entering simulation');
+      maybeEnter();
+    }, 12000);
+  }
 
   function startLobsterDrift() {
     if (!lobsterWatermark) return;
@@ -946,6 +959,7 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
 
   loadSplashCopy();
   startLobsterDrift();
+  startLlmGraceTimer();
   initGalaxyMode();
   window.addEventListener('vnp:ready', () => {
     loadState.galaxy = true;

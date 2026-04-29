@@ -100,6 +100,16 @@ export function mountModelViewer(root, options = {}) {
       options.onError?.(data.message);
     }
   });
+  worker.addEventListener('error', event => {
+    const message = event.message || 'Model worker failed before it could report status';
+    error.textContent = message;
+    options.onError?.(message);
+  });
+  worker.addEventListener('messageerror', () => {
+    const message = 'Model worker sent an unreadable message';
+    error.textContent = message;
+    options.onError?.(message);
+  });
 
   worker.postMessage({ type: 'init' });
   worker.postMessage({ type: 'pause' });

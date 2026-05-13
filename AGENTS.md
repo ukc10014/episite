@@ -27,6 +27,7 @@ This repository contains a browser-based installation app with two screens that 
 - Static fallback remains available with `/app/?mode=static` or `/app/?mode=web`.
 - In static mode, the starfield is deliberately fake: `app/static/starfield-frame.jpg` is a captured frame from the simulator, used as a static stand-in so a public web route does not load the full Three.js renderer or astronomical data.
 - The simulated mode loads `app/renderer.js`, the star catalog, the procedural galaxy, and the real simulator.
+- Starfield controls are hidden by default for installation display. The controlling flag is `SHOW_STARFIELD_CONTROLS` in `app/index.html`; use `/app/?controls=1` for temporary tuning without editing code.
 - Future agents should preserve this split. The static starfield is intentional, not a regression: it keeps arbitrary browsers from trying to run the full galaxy renderer and the in-browser LLM at the same time.
 
 ## Screen One: Von Neumann Probe Starfield
@@ -37,6 +38,7 @@ This repository contains a browser-based installation app with two screens that 
 - Renders a probe-eye view of transit through the Milky Way from processed astronomical data.
 - Loads `data/processed/stars.bin`, `metadata.json`, and `landmarks.json`.
 - Adds procedural Milky Way structure, dust, nebula-like clouds, relativistic visual toggles, minimaps, overlays, and debug controls.
+- The simulator starts playing automatically after load at 1:1 time: one viewer second equals one probe second. In the default hidden-controls view, only the corner Galactic-coordinate heading and distance-from-Sol readout should remain visible.
 - The simulation is intentionally almost still at real human timescales.
 
 ## Screen Two: Browser LLM Activation Viewer

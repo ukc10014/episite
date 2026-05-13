@@ -117,13 +117,14 @@ const PROBES = [
 // a stable shared timebase across reloads and machines.
 const STARFIELD_EPOCH_MS = Date.parse('2016-03-10T00:00:00Z');
 const MS_PER_JULIAN_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+const REALTIME_YEARS_PER_SECOND = 1 / (365.25 * 24 * 60 * 60);
 const SIM_TIME_LIMIT_YEARS = 2000000;
 
 const sim = {
   probeIndex: 0,
   time: 0,           // years
-  playing: false,
-  speed: 10000,      // years per real second
+  playing: true,
+  speed: REALTIME_YEARS_PER_SECOND, // 1:1: one viewer second = one probe second
   fov: 60,
   // Relativistic toggles
   aberration: false,
@@ -1623,14 +1624,27 @@ function formatYears(y) {
 function formatLY(d) {
   if (d >= 1e3) return (d / 1e3).toFixed(1) + ' kly';
   if (d >= 1.0) return d.toFixed(1) + ' ly';
-  return (d * 365.25).toFixed(0) + ' light-days';
+  return (d * MS_PER_JULIAN_YEAR / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' light-seconds';
+}
+
+function formatGalacticHeading(direction) {
+  const [x, y, z] = direction;
+  const longitude = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  const latitude = Math.asin(Math.max(-1, Math.min(1, z))) * 180 / Math.PI;
+  return `l ${longitude.toFixed(1)}°, b ${latitude >= 0 ? '+' : ''}${latitude.toFixed(1)}°`;
+}
+
+function probeTargetName(probe) {
+  return probe.name.replace(/^[^—]+—\s*/, '');
 }
 
 function updateHUD() {
   const probe = PROBES[sim.probeIndex];
   const dist = probePos.length();
 
-  document.getElementById('hud-probe').textContent = probe.name;
+  document.getElementById('hud-probe').textContent =
+    `${formatGalacticHeading(probe.direction)} · ${probeTargetName(probe)}`;
+  document.getElementById('hud-distance').textContent = formatLY(dist);
 
   // Time slider label
   document.getElementById('time-val').textContent =
@@ -1663,9 +1677,9 @@ function updateHUD() {
 function selectProbe(index) {
   sim.probeIndex = index;
   resetSimTimeToEpoch();
-  sim.playing = false;
-  document.getElementById('btn-play').innerHTML = '&#9654; Play';
-  document.getElementById('btn-play').classList.remove('active');
+  sim.playing = true;
+  document.getElementById('btn-play').innerHTML = '&#9646;&#9646; Pause';
+  document.getElementById('btn-play').classList.add('active');
 
   updateProbeState();
 

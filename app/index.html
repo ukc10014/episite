@@ -229,6 +229,9 @@
   #hud .label { color: #555; }
   #hud .val   { color: #ddd; }
   #hud .bright { color: #fff; }
+  body.starfield-controls-hidden .starfield-diagnostic {
+    display: none;
+  }
 
   /* --- Bottom control panel --- */
   #controls {
@@ -240,6 +243,11 @@
     display: flex; flex-direction: column; gap: 8px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+  }
+  body.starfield-controls-hidden #controls,
+  body.starfield-controls-hidden #minimap-popup,
+  body.starfield-controls-hidden #mw-debug {
+    display: none !important;
   }
 
   /* Row layouts */
@@ -485,7 +493,7 @@
     overflow: hidden;
     white-space: nowrap;
     color: #b8dcff;
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1;
     text-shadow: 0 0 8px #000;
   }
@@ -528,10 +536,11 @@
 
 <!-- HUD overlay -->
 <div id="hud">
-  <div><span class="label">Stars:</span> <span class="val" id="hud-stars">loading...</span></div>
-  <div><span class="label">Probe:</span> <span class="val" id="hud-probe">—</span></div>
-  <div><span class="label">Nearest:</span> <span class="val" id="hud-nearest">—</span></div>
-  <div><span class="label">FPS:</span> <span class="val" id="hud-fps">—</span></div>
+  <div class="starfield-diagnostic"><span class="label">Stars:</span> <span class="val" id="hud-stars">loading...</span></div>
+  <div><span class="label">Heading:</span> <span class="val" id="hud-probe">—</span></div>
+  <div><span class="label">Distance from Sol:</span> <span class="val" id="hud-distance">—</span></div>
+  <div class="starfield-diagnostic"><span class="label">Nearest:</span> <span class="val" id="hud-nearest">—</span></div>
+  <div class="starfield-diagnostic"><span class="label">FPS:</span> <span class="val" id="hud-fps">—</span></div>
 </div>
 
 <!-- Mini-map popup -->
@@ -642,10 +651,10 @@
 
     <span class="ctrl-label" style="min-width:auto">Speed</span>
     <div class="toggle-group" id="speed-group">
-      <button class="speed-btn" data-speed="3.1688e-8" title="Real-time: 1 second = 1 second">1:1</button>
+      <button class="speed-btn active" data-speed="3.1688e-8" title="Real-time: 1 second = 1 second">1:1</button>
       <button class="speed-btn" data-speed="100" title="100 years per second (~3 billion × real-time)">100</button>
       <button class="speed-btn" data-speed="1000" title="1,000 years per second">1k</button>
-      <button class="speed-btn active" data-speed="10000" title="10,000 years per second">10k</button>
+      <button class="speed-btn" data-speed="10000" title="10,000 years per second">10k</button>
       <button class="speed-btn" data-speed="100000" title="100,000 years per second">100k</button>
     </div>
     <span class="ctrl-label" style="min-width:auto; color:#555">yr/s</span>
@@ -746,6 +755,12 @@ import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode') || 'simulate';
   const useSimulatedStarfield = !['static', 'web'].includes(mode);
+  // Installation-display flag. The default is a clean projection surface:
+  // no transport controls, debug panels, minimap, or diagnostic HUD. Use
+  // `?controls=1` while tuning if the full starfield interface is needed.
+  const SHOW_STARFIELD_CONTROLS = false;
+  const showStarfieldControls = SHOW_STARFIELD_CONTROLS || params.get('controls') === '1';
+  document.body.classList.toggle('starfield-controls-hidden', !showStarfieldControls);
   let dismissed = false;
   let activeScreen = 'galaxy';
   let swapTimer = 0;
@@ -807,7 +822,7 @@ import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
       updateProgress('Loading simulated starfield');
       const script = document.createElement('script');
       script.type = 'module';
-      script.src = 'renderer.js?v=flag-palette-2';
+      script.src = 'renderer.js?v=starfield-realtime-1';
       script.addEventListener('error', () => {
         loadState.galaxy = true;
         galaxyScreen.classList.add('fake-starfield');

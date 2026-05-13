@@ -111,6 +111,14 @@ const PROBES = [
 // Simulation state
 // ---------------------------------------------------------------------------
 
+// Fixed starfield epoch for the project: a reference to AlphaGo / Lee Sedol
+// and Move 37, supplied as 10 March 2016 in the project notes. The probe
+// clock starts from this date instead of from page load, so the starfield has
+// a stable shared timebase across reloads and machines.
+const STARFIELD_EPOCH_MS = Date.parse('2016-03-10T00:00:00Z');
+const MS_PER_JULIAN_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+const SIM_TIME_LIMIT_YEARS = 2000000;
+
 const sim = {
   probeIndex: 0,
   time: 0,           // years
@@ -131,6 +139,17 @@ const sim = {
   showLabels: false,
   showMap: false,
 };
+
+function starfieldEpochYears(nowMs = Date.now()) {
+  const elapsedYears = (nowMs - STARFIELD_EPOCH_MS) / MS_PER_JULIAN_YEAR;
+  return Math.max(0, Math.min(SIM_TIME_LIMIT_YEARS, elapsedYears));
+}
+
+function resetSimTimeToEpoch() {
+  sim.time = starfieldEpochYears();
+  const timeSlider = document.getElementById('time-slider');
+  if (timeSlider) timeSlider.value = sim.time;
+}
 
 // Derived: current probe position & velocity vector (updated each frame)
 const probePos = new THREE.Vector3();
@@ -266,13 +285,13 @@ const vertexShader = /* glsl */ `
       // dopplerFactor < 1 = receding = redshift
       float shift = clamp(dopplerFactor, 0.3, 3.0);
       if (shift > 1.0) {
-        // Blueshift: boost blue, reduce red
+        // Approaching stars bend toward the green-white side of the flag palette.
         float t = min((shift - 1.0) * 1.5, 1.0);
-        color = mix(color, vec3(0.6, 0.7, 1.0), t * 0.6);
+        color = mix(color, vec3(0.45, 1.0, 0.62), t * 0.6);
       } else {
-        // Redshift: boost red, reduce blue
+        // Receding stars bend toward the red side of the flag palette.
         float t = min((1.0 - shift) * 1.5, 1.0);
-        color = mix(color, vec3(1.0, 0.5, 0.2), t * 0.6);
+        color = mix(color, vec3(0.94, 0.10, 0.14), t * 0.6);
       }
     }
 
@@ -376,6 +395,59 @@ function bvToRgb(bv) {
   ];
 }
 
+function hsvToRgb01(h, s, v) {
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+    case 0: return [v, t, p];
+    case 1: return [q, v, p];
+    case 2: return [p, v, t];
+    case 3: return [p, q, v];
+    case 4: return [t, p, v];
+    default: return [v, p, q];
+  }
+}
+
+function mixRgb01(a, b, t) {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
+}
+
+function smoothstep01(edge0, edge1, value) {
+  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function flagStarRgbFromWarmth(warmth) {
+  // Red, white, black, and green reference Gaza/Palestine.
+  const w = Math.max(0, Math.min(1, warmth));
+  const green = hsvToRgb01(141 / 360, 0.86, 1.0);
+  const white = [1.0, 1.0, 1.0];
+  const red = hsvToRgb01(356 / 360, 0.86, 1.0);
+  if (w < 0.48) return mixRgb01(green, white, smoothstep01(0.34, 0.48, w));
+  if (w > 0.52) return mixRgb01(white, red, smoothstep01(0.52, 0.66, w));
+  return white;
+}
+
+function bvToFlagRgb(bv) {
+  const warmth = (Math.max(-0.4, Math.min(2.0, bv)) + 0.4) / 2.4;
+  return flagStarRgbFromWarmth(warmth);
+}
+
+function sourceRgbToFlagRgb(r, g, b) {
+  const naturalWarmth = Math.max(0, Math.min(1, ((r - b) + 1) * 0.5));
+  const direction = Math.sign(naturalWarmth - 0.5);
+  const contrast = Math.pow(Math.abs(naturalWarmth - 0.5) * 2, 0.55);
+  const warmth = 0.5 + direction * contrast * 0.5;
+  return flagStarRgbFromWarmth(warmth);
+}
+
 // Galactic density at world-space point (Sol at origin, GC at +x = 26000)
 function galacticDensity(x, y, z) {
   // Convert to galactocentric coordinates
@@ -466,7 +538,7 @@ function generateProceduralStars(count, seed) {
     // Accepted — generate star properties
     const absMag = sampleAbsMag(rand);
     const bv = absMagToBV(absMag, rand);
-    const rgb = bvToRgb(bv);
+    const rgb = bvToFlagRgb(bv);
 
     const base = accepted * 7;
     data[base]     = wx;
@@ -712,9 +784,17 @@ const mwFragmentShader = /* glsl */ `
       dd += uRiftStrength * riftFade * exp(-R / (DISK_SL * 1.2));
 
       // --- Accumulate ---
-      float warmth = smoothstep(0.15, 0.8, sd);
-      vec3 emColor = mix(vec3(0.35, 0.4, 0.55), vec3(0.85, 0.7, 0.45), warmth);
-      emColor += vec3(0.15, 0.0, 0.05) * smoothstep(0.5, 1.5, sd);
+      // Red, white, black, and green reference Gaza/Palestine.
+      // Black comes from the background and dust absorption; emission moves
+      // from green through white into red as local stellar density rises.
+      float warmth = smoothstep(0.08, 1.15, sd);
+      vec3 flagGreen = vec3(0.00, 0.62, 0.24);
+      vec3 flagWhite = vec3(1.00, 1.00, 1.00);
+      vec3 flagRed = vec3(0.93, 0.08, 0.13);
+      vec3 emColor = warmth < 0.5
+        ? mix(flagGreen, flagWhite, smoothstep(0.10, 0.50, warmth))
+        : mix(flagWhite, flagRed, smoothstep(0.50, 0.90, warmth));
+      emColor = mix(emColor, flagRed, smoothstep(1.0, 2.0, sd) * 0.35);
 
       color += emColor * sd * stepSize * uEmission * transmittance;
 
@@ -886,9 +966,10 @@ async function init() {
     positions[i * 3 + 1] = floatData[base + 1];
     positions[i * 3 + 2] = floatData[base + 2];
     absMags[i]           = floatData[base + 3];
-    colors[i * 3]        = floatData[base + 4];
-    colors[i * 3 + 1]    = floatData[base + 5];
-    colors[i * 3 + 2]    = floatData[base + 6];
+    const rgb = sourceRgbToFlagRgb(floatData[base + 4], floatData[base + 5], floatData[base + 6]);
+    colors[i * 3]        = rgb[0];
+    colors[i * 3 + 1]    = rgb[1];
+    colors[i * 3 + 2]    = rgb[2];
   }
 
   // Append procedural stars
@@ -1420,8 +1501,8 @@ function drawMiniMap() {
 function simTick(dt) {
   if (!sim.playing) return;
   sim.time += sim.speed * dt;
-  sim.time = Math.min(sim.time, 2000000);
-  if (sim.time >= 2000000) sim.playing = false;
+  sim.time = Math.min(sim.time, SIM_TIME_LIMIT_YEARS);
+  if (sim.time >= SIM_TIME_LIMIT_YEARS) sim.playing = false;
   document.getElementById('time-slider').value = sim.time;
 }
 
@@ -1581,9 +1662,8 @@ function updateHUD() {
 
 function selectProbe(index) {
   sim.probeIndex = index;
-  sim.time = 0;
+  resetSimTimeToEpoch();
   sim.playing = false;
-  document.getElementById('time-slider').value = 0;
   document.getElementById('btn-play').innerHTML = '&#9654; Play';
   document.getElementById('btn-play').classList.remove('active');
 
@@ -1619,8 +1699,8 @@ function setupUI() {
   const btnPlay = document.getElementById('btn-play');
   btnPlay.addEventListener('click', () => {
     sim.playing = !sim.playing;
-    if (sim.playing && sim.time >= 2000000) {
-      sim.time = 0; // restart if at end
+    if (sim.playing && sim.time >= SIM_TIME_LIMIT_YEARS) {
+      resetSimTimeToEpoch();
     }
     btnPlay.innerHTML = sim.playing ? '&#9646;&#9646; Pause' : '&#9654; Play';
     btnPlay.classList.toggle('active', sim.playing);

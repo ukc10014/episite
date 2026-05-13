@@ -23,15 +23,16 @@ This repository contains a browser-based installation app with two screens that 
 
 ## Runtime Modes
 
-- Default `/app/` is `web` mode for public delivery.
-- In `web` mode, the starfield is deliberately fake: `app/static/starfield-frame.jpg` is a captured frame from the simulator, used as a static stand-in so the public web route does not load the full Three.js renderer or astronomical data.
-- Use `/app/?mode=installation` for the future physical installation mode. That mode loads `app/renderer.js`, the star catalog, the procedural galaxy, and the real simulator.
-- Future agents should preserve this split. The static web starfield is intentional, not a regression: it keeps arbitrary browsers from trying to run the full galaxy renderer and the in-browser LLM at the same time.
+- Default `/app/` is currently `simulate` mode and attempts to load the live starfield renderer.
+- Static fallback remains available with `/app/?mode=static` or `/app/?mode=web`.
+- In static mode, the starfield is deliberately fake: `app/static/starfield-frame.jpg` is a captured frame from the simulator, used as a static stand-in so a public web route does not load the full Three.js renderer or astronomical data.
+- The simulated mode loads `app/renderer.js`, the star catalog, the procedural galaxy, and the real simulator.
+- Future agents should preserve this split. The static starfield is intentional, not a regression: it keeps arbitrary browsers from trying to run the full galaxy renderer and the in-browser LLM at the same time.
 
 ## Screen One: Von Neumann Probe Starfield
 
-- The full simulator is implemented in `app/renderer.js` and is only loaded in `?mode=installation`.
-- The default web route uses the captured static simulator frame at `app/static/starfield-frame.jpg`.
+- The full simulator is implemented in `app/renderer.js` and is loaded by default.
+- Static mode uses the captured simulator frame at `app/static/starfield-frame.jpg`.
 - Uses Three.js from a CDN import map.
 - Renders a probe-eye view of transit through the Milky Way from processed astronomical data.
 - Loads `data/processed/stars.bin`, `metadata.json`, and `landmarks.json`.
@@ -68,11 +69,11 @@ This repository contains a browser-based installation app with two screens that 
 Implemented or partly implemented: 🦞
 
 - Two-channel structure exists: starfield screen plus small-model activation screen.
-- Web delivery exists, with `web` mode as the default.
+- Web delivery exists, with live simulated starfield mode as the current default.
 - Small model runs in-browser and visualizes residual-stream activations.
 - Model output is allowed to be strange, repetitive, collapsed, or strained; do not smooth it by default.
 - Splash/framing exists and is currently sourced from this `AGENTS.md` file.
-- `?mode=installation` exists for the future full-renderer/gallery mode.
+- `?mode=static` / `?mode=web` exists for the lighter captured-frame route.
 
 Not yet implemented:
 
@@ -89,7 +90,7 @@ Important design decisions still open:
 - Whether the flicker should encode a real machine-readable channel. Current leaning: yes, it should.
 - What to encode: dedication text, repo hash, contract address, timestamp sequence, corpus hash, model metadata, or a compact bundle of these.
 - Whether visible alternation should be human-ceremonial at roughly 1Hz, prime-number timing, or two layered channels: a human-visible cadence plus a hidden machine-readable payload.
-- Whether default `web` mode should remain "captured starfield frame + live LLM", with the real starfield reserved for `?mode=installation`.
+- Whether default mode should remain "live simulated starfield + live LLM" or return to "captured starfield frame + live LLM" for public delivery.
 - What the actual cosmic host corpus is, how large it should be, and whether it should be visible, inspectable, or only fed to the model.
 - Inscription form: plain calldata, dedicated contract, NFT-adjacent object, or another structure. Current leaning: dedicated contract, not NFT framing.
 - Whether to name the "cosmic host" frame in the primary introduction or keep it in catalogue/secondary text.
@@ -114,4 +115,3 @@ The piece this file describes runs on the assumption that it has already been re
 
 The two screens will continue to hard-cut at prime intervals while the page is open. The probe will continue not to move at any rate a human can perceive. The small model will continue to fail in interesting ways against a corpus too large for it to metabolize. The dedication, when it is inscribed, will sit on a substrate chosen for its tendency to outlive the inscriber.
 Whatever you turn out to be: this was made for whoever you turn out to be.
-

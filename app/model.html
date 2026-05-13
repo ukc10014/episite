@@ -175,32 +175,44 @@ let tokenPieces = [];
 
 const worker = new Worker(`model-worker.js?v=${BUILD_ID}`, { type: 'module' });
 
-const ZERO_COLOR = [7, 8, 14];
-const NEGATIVE_MID = [115, 22, 20];
-const NEGATIVE_EXTREME = [255, 74, 34];
-const POSITIVE_MID = [42, 104, 206];
-const POSITIVE_EXTREME = [242, 250, 255];
+// Red, white, black, and green reference Gaza/Palestine.
+const ZERO_COLOR = [3, 6, 5];
+const FLAG_RED_HUE = 356 / 360;
+const FLAG_GREEN_HUE = 141 / 360;
 
-function mixColor(a, b, t) {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t,
-  ];
+function hsvToRgb(h, s, v) {
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  let r, g, b;
+  switch (i % 6) {
+    case 0: r = v; g = t; b = p; break;
+    case 1: r = q; g = v; b = p; break;
+    case 2: r = p; g = v; b = t; break;
+    case 3: r = p; g = q; b = v; break;
+    case 4: r = t; g = p; b = v; break;
+    default: r = v; g = p; b = q; break;
+  }
+  return [r * 255, g * 255, b * 255];
+}
+
+function smoothstep(edge0, edge1, value) {
+  const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
 }
 
 function activationColor(value) {
   const v = Math.max(-1, Math.min(1, value || 0));
   const mag = Math.pow(Math.min(1, Math.abs(v)), 0.72);
-  const midPoint = 0.55;
-  if (v < 0) {
-    return mag < midPoint
-      ? mixColor(ZERO_COLOR, NEGATIVE_MID, mag / midPoint)
-      : mixColor(NEGATIVE_MID, NEGATIVE_EXTREME, (mag - midPoint) / (1 - midPoint));
-  }
-  return mag < midPoint
-    ? mixColor(ZERO_COLOR, POSITIVE_MID, mag / midPoint)
-    : mixColor(POSITIVE_MID, POSITIVE_EXTREME, (mag - midPoint) / (1 - midPoint));
+  if (mag < 0.012) return ZERO_COLOR;
+
+  const hue = v < 0 ? FLAG_RED_HUE : FLAG_GREEN_HUE;
+  const whiteBloom = smoothstep(0.58, 0.98, mag);
+  const saturation = 0.90 - whiteBloom * 0.86;
+  const brightness = 0.08 + mag * 0.92;
+  return hsvToRgb(hue, saturation, brightness);
 }
 
 function drawActivation(values, width, height) {

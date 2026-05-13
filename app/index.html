@@ -44,7 +44,7 @@
     --lobster-x: 0px;
     --lobster-y: 0px;
     z-index: 80;
-    width: clamp(110px, 14vw, 220px);
+    width: clamp(143px, 18.2vw, 286px);
     aspect-ratio: 271.5 / 724;
     pointer-events: none;
     opacity: 0.2;
@@ -88,10 +88,13 @@
     position: absolute;
     inset: 0 0 -17vh 0;
     background:
+      /* Red, white, black, and green reference Gaza/Palestine. */
+      linear-gradient(115deg, rgba(0,151,54,0.34), rgba(255,255,255,0.10) 48%, rgba(238,42,53,0.32)),
       linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)),
       url("static/starfield-frame.jpg") center top / cover no-repeat,
       #010103;
-    filter: saturate(0.95) contrast(1.02) brightness(0.86);
+    background-blend-mode: color, normal, normal, normal;
+    filter: saturate(1.08) contrast(1.04) brightness(0.82);
   }
   #galaxy-screen.fake-starfield::after {
     content: "WEB MODE: STATIC STARFIELD";
@@ -212,7 +215,7 @@
       display: none;
     }
     #lobster-watermark {
-      width: 96px;
+      width: 125px;
       opacity: 0.2;
     }
   }
@@ -724,7 +727,7 @@
 </script>
 
 <script type="module">
-import { mountModelViewer } from './model-viewer.js?v=corpus-1';
+import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
 
 (() => {
   const galaxyScreen = document.getElementById('galaxy-screen');
@@ -741,7 +744,8 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
     splashScrolled: false,
   };
   const params = new URLSearchParams(window.location.search);
-  const mode = params.get('mode') === 'installation' ? 'installation' : 'web';
+  const mode = params.get('mode') || 'simulate';
+  const useSimulatedStarfield = !['static', 'web'].includes(mode);
   let dismissed = false;
   let activeScreen = 'galaxy';
   let swapTimer = 0;
@@ -799,11 +803,11 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   }
 
   function initGalaxyMode() {
-    if (mode === 'installation') {
-      updateProgress('Loading installation starfield');
+    if (useSimulatedStarfield) {
+      updateProgress('Loading simulated starfield');
       const script = document.createElement('script');
       script.type = 'module';
-      script.src = 'renderer.js?v=installation-1';
+      script.src = 'renderer.js?v=flag-palette-2';
       script.addEventListener('error', () => {
         loadState.galaxy = true;
         galaxyScreen.classList.add('fake-starfield');
@@ -932,6 +936,9 @@ import { mountModelViewer } from './model-viewer.js?v=corpus-1';
   }
 
   function nextPrimeIntervalMs() {
+    // Prime intervals restart at page load. We do not guard for overflow here:
+    // browser timer limits only become relevant after an exhibition-impossible
+    // runtime, long after the cadence has become perceptually static.
     if (firstSwap) {
       firstSwap = false;
       return 1;

@@ -38,6 +38,10 @@ const SPIRAL_ARM_WIDTH = 0.15;  // Arm angular half-width (radians)
 const SPIRAL_ARM_STRENGTH = 0.5; // Arm overdensity factor
 const PROCEDURAL_COUNT = 500000;
 const HYG_EXCLUSION_RADIUS = 500; // ly — don't place procedural stars near Sol
+// Detailed labels can overwhelm the field. Leave this true to include the
+// named HYG stars in the Labels overlay; set false for landmarks only.
+const SHOW_STAR_DATA_LABELS = true;
+const MAX_STAR_DATA_LABELS = 500;
 
 // Solar sail
 const SAIL_DISTANCE = 1000;      // meters ahead of probe
@@ -131,7 +135,7 @@ const sim = {
   showArms: false,
   showRings: false,
   showTrail: false,
-  showLabels: false,
+  showLabels: true,
   showMap: false,
 };
 
@@ -332,7 +336,7 @@ let cssRenderer; // CSS2DRenderer for labels
 let starMaterial;
 let metadata;
 let landmarks;
-let namedStarPositions = []; // {name, pos: Vector3}
+let namedStarPositions = []; // {name, pos: Vector3, absMag, sourceRgb}
 
 // Solar sail (separate near-field scene)
 let sailScene, sailCamera, sailMesh, sailMaterial;
@@ -983,11 +987,14 @@ async function init() {
   console.log(`[VNP] Total: ${totalCount.toLocaleString()} stars (${hygCount.toLocaleString()} HYG + ${PROCEDURAL_COUNT.toLocaleString()} procedural)`);
 
   // Cache named star positions
-  for (const ns of metadata.namedStars.slice(0, 200)) {
+  for (const ns of metadata.namedStars.slice(0, MAX_STAR_DATA_LABELS)) {
     const idx = ns.index;
+    const base = idx * 7;
     namedStarPositions.push({
       name: ns.name,
       pos: new THREE.Vector3(positions[idx * 3], positions[idx * 3 + 1], positions[idx * 3 + 2]),
+      absMag: floatData[base + 3],
+      sourceRgb: [floatData[base + 4], floatData[base + 5], floatData[base + 6]],
     });
   }
 
@@ -1266,6 +1273,14 @@ function createOverlays() {
     lbl.position.set(pt.x, pt.y, pt.z);
     labelsGroup.add(lbl);
   }
+
+  if (SHOW_STAR_DATA_LABELS) {
+    for (const star of namedStarPositions) {
+      const lbl = makeStarDataLabel(star);
+      lbl.position.copy(star.pos);
+      labelsGroup.add(lbl);
+    }
+  }
   scene.add(labelsGroup);
 
   console.log('[VNP] Overlays created (all hidden by default)');
@@ -1276,6 +1291,27 @@ function makeLabel(text, className) {
   div.className = className;
   div.textContent = text;
   return new CSS2DObject(div);
+}
+
+function makeStarDataLabel(star) {
+  const div = document.createElement('div');
+  div.className = 'landmark-label star-data-label';
+
+  const marker = document.createElement('span');
+  marker.className = 'star-data-marker';
+  div.appendChild(marker);
+
+  const text = document.createElement('span');
+  text.className = 'star-data-text';
+  text.textContent = formatStarDataLabel(star);
+  div.appendChild(text);
+
+  return new CSS2DObject(div);
+}
+
+function formatStarDataLabel(star) {
+  const [r, g, b] = star.sourceRgb.map(channel => Math.round(channel * 255));
+  return `${star.name}\nM ${star.absMag.toFixed(2)}\nrgb ${r},${g},${b}`;
 }
 
 function updateTrail() {

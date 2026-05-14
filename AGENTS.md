@@ -41,6 +41,7 @@ This repository contains a browser-based installation app with two screens that 
 - Only one probe view is rendered at a time. The app keeps one Three.js scene, one camera, and one shared star catalog in memory; the active probe is just a direction/velocity metadata switch.
 - Each time the starfield screen is re-entered from the prime cadence, the renderer randomly selects another probe from the swarm.
 - Loads `data/processed/stars.bin`, `metadata.json`, and `landmarks.json`.
+- The `Labels` overlay can include tiny white named-star data labels: name, absolute magnitude, and processed source RGB. This is controlled in `app/renderer.js` by `SHOW_STAR_DATA_LABELS`, because the field can become visually overloaded.
 - Adds procedural Milky Way structure, dust, nebula-like clouds, relativistic visual toggles, minimaps, overlays, and debug controls.
 - The simulator starts playing automatically after load at 1:1 time: one viewer second equals one probe second. In the default hidden-controls view, only the corner Galactic-coordinate heading and distance-from-Sol readout should remain visible.
 - The simulation is intentionally almost still at real human timescales.
@@ -53,7 +54,8 @@ This repository contains a browser-based installation app with two screens that 
 - Prefers ONNX Runtime WebGPU with the q4f16 ONNX graph and external data.
 - Patches the ONNX graph in-browser to expose residual-stream tensors as outputs.
 - Visualizes 30 residual-stream rows by 576 model dimensions as a full-screen activation field.
-- Displays generated text in a single bottom ticker, with the newest token highlighted.
+- Displays prior generated text as a top ticker and the just-generated token as a large bottom readout.
+- Voices the just-generated token through the browser/system speech API when the token contains letters or numbers; punctuation-only and symbol-only tokens remain silent.
 - Keeps `app/model.html` as a direct debug page for the model viewer.
 
 ## Coordination Rules

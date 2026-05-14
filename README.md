@@ -108,6 +108,7 @@ The "Tune" button opens a live parameter panel for adjusting the volumetric Milk
 - Three.js r170 via CDN import map (no bundler)
 - 119k real stars (HYG catalog) + 500k procedural stars filling the galaxy
 - Stars: custom `ShaderMaterial` with magnitude-based sizing and colour
+- LLM token vocalization exists in the browser viewer but is disabled by default; set `VOICE_GENERATED_TOKENS` to `true` in `app/model-viewer.js` and `app/model.html` to re-enable speech for generated alphanumeric tokens.
 - Milky Way: ray-marched volumetric shader on a sky sphere (24 steps, 80k ly range)
   - Exponential disk + spiral arms + central bulge density model
   - Domain-warped FBM noise for fractal cloud boundaries

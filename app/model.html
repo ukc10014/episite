@@ -53,6 +53,7 @@
   }
   #activation-wrap {
     position: relative;
+    z-index: 1;
     min-height: 0;
     overflow: hidden;
   }
@@ -106,19 +107,23 @@
   }
   #current-token-strip {
     position: relative;
-    overflow: hidden;
+    z-index: 5;
+    overflow: visible;
     border-top: 1px solid rgba(255,255,255,0.16);
     background: rgba(0,0,0,0.92);
   }
   #latest-token {
     position: absolute;
-    inset: 0 18px;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    height: 110px;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
-    color: #b8dcff;
+    color: #fff;
     font-size: 100px;
     line-height: 1;
     text-shadow: 0 0 8px #000;
@@ -172,6 +177,9 @@ const context = document.getElementById('context-content');
 const latestToken = document.getElementById('latest-token');
 
 let tokenPieces = [];
+const VOICE_GENERATED_TOKENS = false;
+const SPEECH_RATE = 1.05;
+const SPEECH_PITCH = 0.82;
 
 const worker = new Worker(`model-worker.js?v=${BUILD_ID}`, { type: 'module' });
 
@@ -233,6 +241,27 @@ function drawActivation(values, width, height) {
   ctx.putImageData(image, 0, 0);
 }
 
+function speechTextForToken(text) {
+  const raw = String(text || '').replace(/[\u0000-\u001f]+/g, ' ').trim();
+  if (!/[A-Za-z0-9]/.test(raw)) return '';
+  return raw
+    .replace(/^[^A-Za-z0-9]+/, '')
+    .replace(/[^A-Za-z0-9]+$/, '')
+    .replace(/[^A-Za-z0-9'-]+/g, ' ')
+    .trim();
+}
+
+function voiceGeneratedToken(text) {
+  if (!VOICE_GENERATED_TOKENS || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+  const spoken = speechTextForToken(text);
+  if (!spoken) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(spoken);
+  utterance.rate = SPEECH_RATE;
+  utterance.pitch = SPEECH_PITCH;
+  window.speechSynthesis.speak(utterance);
+}
+
 function appendGeneratedToken(text) {
   tokenPieces.push(text);
   if (tokenPieces.length > 240) tokenPieces = tokenPieces.slice(-240);
@@ -240,6 +269,7 @@ function appendGeneratedToken(text) {
   const priorText = tokenPieces.slice(0, -1).join('').replace(/\s+/g, ' ');
   context.textContent = priorText.slice(-900);
   latestToken.textContent = text || ' ';
+  voiceGeneratedToken(text);
 }
 
 worker.addEventListener('message', ({ data }) => {

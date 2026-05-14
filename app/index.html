@@ -312,17 +312,46 @@
 
   /* 3D landmark labels (rendered by CSS2DRenderer) */
   .landmark-label {
-    color: #667;
+    color: #fff;
     font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 10px;
+    font-size: 6px;
     padding: 1px 4px;
     pointer-events: none;
     white-space: nowrap;
     text-shadow: 0 0 4px #000, 0 0 2px #000;
   }
   .landmark-label.major {
-    color: #889;
-    font-size: 11px;
+    color: #fff;
+    font-size: 7px;
+  }
+  .star-data-label {
+    color: #fff;
+    width: 0;
+    height: 0;
+    padding: 0;
+    font-size: 6px;
+    opacity: 0.85;
+  }
+  .star-data-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 8px;
+    height: 7px;
+    border-top: 1px solid rgba(255,255,255,0.85);
+    border-right: 1px solid rgba(255,255,255,0.85);
+    box-sizing: border-box;
+  }
+  .star-data-text {
+    position: absolute;
+    left: 11px;
+    top: 7px;
+    color: #fff;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 6px;
+    line-height: 1.15;
+    white-space: pre;
+    text-shadow: 0 0 4px #000, 0 0 2px #000;
   }
 
   /* --- Mini-map popup --- */
@@ -427,6 +456,7 @@
   }
   #activation-wrap {
     position: relative;
+    z-index: 1;
     min-height: 0;
     overflow: hidden;
   }
@@ -480,19 +510,23 @@
   }
   #current-token-strip {
     position: relative;
-    overflow: hidden;
+    z-index: 5;
+    overflow: visible;
     border-top: 1px solid rgba(255,255,255,0.16);
     background: rgba(0,0,0,0.92);
   }
   #latest-token {
     position: absolute;
-    inset: 0 18px;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    height: 110px;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
     white-space: nowrap;
-    color: #b8dcff;
+    color: #fff;
     font-size: 100px;
     line-height: 1;
     text-shadow: 0 0 8px #000;
@@ -736,7 +770,7 @@
 </script>
 
 <script type="module">
-import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
+import { mountModelViewer } from './model-viewer.js?v=mute-token-1';
 
 (() => {
   const galaxyScreen = document.getElementById('galaxy-screen');
@@ -822,7 +856,7 @@ import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
       updateProgress('Loading simulated starfield');
       const script = document.createElement('script');
       script.type = 'module';
-      script.src = 'renderer.js?v=probe-swarm-1';
+      script.src = 'renderer.js?v=star-labels-2';
       script.addEventListener('error', () => {
         loadState.galaxy = true;
         galaxyScreen.classList.add('fake-starfield');

@@ -13,6 +13,9 @@ export function mountModelViewer(root, options = {}) {
 
   let tokenPieces = [];
   const worker = new Worker(`model-worker.js?v=${BUILD_ID}`, { type: 'module' });
+  const VOICE_GENERATED_TOKENS = false;
+  const SPEECH_RATE = 1.05;
+  const SPEECH_PITCH = 0.82;
 
   // Red, white, black, and green reference Gaza/Palestine.
   const ZERO_COLOR = [3, 6, 5];
@@ -72,6 +75,27 @@ export function mountModelViewer(root, options = {}) {
     ctx.putImageData(image, 0, 0);
   }
 
+  function speechTextForToken(text) {
+    const raw = String(text || '').replace(/[\u0000-\u001f]+/g, ' ').trim();
+    if (!/[A-Za-z0-9]/.test(raw)) return '';
+    return raw
+      .replace(/^[^A-Za-z0-9]+/, '')
+      .replace(/[^A-Za-z0-9]+$/, '')
+      .replace(/[^A-Za-z0-9'-]+/g, ' ')
+      .trim();
+  }
+
+  function voiceGeneratedToken(text) {
+    if (!VOICE_GENERATED_TOKENS || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    const spoken = speechTextForToken(text);
+    if (!spoken) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(spoken);
+    utterance.rate = SPEECH_RATE;
+    utterance.pitch = SPEECH_PITCH;
+    window.speechSynthesis.speak(utterance);
+  }
+
   function appendGeneratedToken(text) {
     tokenPieces.push(text);
     if (tokenPieces.length > 240) tokenPieces = tokenPieces.slice(-240);
@@ -79,6 +103,7 @@ export function mountModelViewer(root, options = {}) {
     const priorText = tokenPieces.slice(0, -1).join('').replace(/\s+/g, ' ');
     context.textContent = priorText.slice(-900);
     latestToken.textContent = text || ' ';
+    voiceGeneratedToken(text);
   }
 
   worker.addEventListener('message', ({ data }) => {

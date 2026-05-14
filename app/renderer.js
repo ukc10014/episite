@@ -59,53 +59,47 @@ function normalize(x, y, z) {
   return [x / len, y / len, z / len];
 }
 
-// Alpha Centauri direction (from metadata: position -1.6, -1.4, -3.8 ly)
-const ALPHA_CEN_DIR = normalize(-1.6, -1.4, -3.8);
-// LMC approximate direction
-const LMC_DIR = normalize(-1300, -33800, -49300);
+const PROBE_COUNT = 997; // nearest prime to 1000
+const PROBE_VELOCITY = 0.05;
+const PROBE_PLANE_BIAS_EXPONENT = 2.35;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-const PROBES = [
-  {
-    name: 'Alpha — Galactic Center',
-    direction: [1, 0, 0],
-    velocity: 0.05,
-  },
-  {
-    name: 'Beta — Anti-Center',
-    direction: [-1, 0, 0],
-    velocity: 0.05,
-  },
-  {
-    name: 'Gamma — Galactic Rotation',
-    direction: [0, 1, 0],
-    velocity: 0.05,
-  },
-  {
-    name: 'Delta — Anti-Rotation',
-    direction: [0, -1, 0],
-    velocity: 0.05,
-  },
-  {
-    name: 'Epsilon — North Pole',
-    direction: [0, 0, 1],
-    velocity: 0.05,
-  },
-  {
-    name: 'Zeta — South Pole',
-    direction: [0, 0, -1],
-    velocity: 0.05,
-  },
-  {
-    name: 'Eta — Alpha Centauri',
-    direction: ALPHA_CEN_DIR,
-    velocity: 0.05,
-  },
-  {
-    name: 'Theta — Large Magellanic Cloud',
-    direction: LMC_DIR,
-    velocity: 0.10,
-  },
-];
+function galacticCoordinates(direction) {
+  const [x, y, z] = direction;
+  const longitude = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  const latitude = Math.asin(Math.max(-1, Math.min(1, z))) * 180 / Math.PI;
+  return { longitude, latitude };
+}
+
+function formatProbeNumber(index) {
+  return String(index + 1).padStart(4, '0');
+}
+
+function generateProbeSwarm(count) {
+  return Array.from({ length: count }, (_, index) => {
+    const centered = ((index + 0.5) / count) * 2 - 1;
+    // Compress galactic latitude toward b=0 so the probe swarm is denser
+    // around the Milky Way plane while still sampling both poles.
+    const biasedZ = Math.sign(centered) * Math.pow(Math.abs(centered), PROBE_PLANE_BIAS_EXPONENT);
+    const radius = Math.sqrt(Math.max(0, 1 - biasedZ * biasedZ));
+    const longitude = index * GOLDEN_ANGLE;
+    const direction = normalize(
+      Math.cos(longitude) * radius,
+      Math.sin(longitude) * radius,
+      biasedZ,
+    );
+    const coords = galacticCoordinates(direction);
+    return {
+      name: `Probe ${formatProbeNumber(index)}`,
+      direction,
+      velocity: PROBE_VELOCITY,
+      longitude: coords.longitude,
+      latitude: coords.latitude,
+    };
+  });
+}
+
+const PROBES = generateProbeSwarm(PROBE_COUNT);
 
 // ---------------------------------------------------------------------------
 // Simulation state
@@ -1628,9 +1622,7 @@ function formatLY(d) {
 }
 
 function formatGalacticHeading(direction) {
-  const [x, y, z] = direction;
-  const longitude = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-  const latitude = Math.asin(Math.max(-1, Math.min(1, z))) * 180 / Math.PI;
+  const { longitude, latitude } = galacticCoordinates(direction);
   return `l ${longitude.toFixed(1)}°, b ${latitude >= 0 ? '+' : ''}${latitude.toFixed(1)}°`;
 }
 
@@ -1674,10 +1666,14 @@ function updateHUD() {
 // Probe selection
 // ---------------------------------------------------------------------------
 
-function selectProbe(index) {
-  sim.probeIndex = index;
+function selectProbe(index, options = {}) {
+  const numericIndex = Number(index);
+  const requestedIndex = Number.isFinite(numericIndex) ? numericIndex : 0;
+  sim.probeIndex = ((requestedIndex % PROBES.length) + PROBES.length) % PROBES.length;
   resetSimTimeToEpoch();
   sim.playing = true;
+  const probeSelect = document.getElementById('probe-select');
+  if (probeSelect) probeSelect.value = sim.probeIndex;
   document.getElementById('btn-play').innerHTML = '&#9646;&#9646; Pause';
   document.getElementById('btn-play').classList.add('active');
 
@@ -1685,13 +1681,27 @@ function selectProbe(index) {
 
   // Reset camera: position at origin, looking along travel direction
   camera.position.set(0, 0, 0);
-  const dir = PROBES[index].direction;
+  const dir = PROBES[sim.probeIndex].direction;
   controls.target.set(dir[0] * 100, dir[1] * 100, dir[2] * 100);
   controls.update();
 
   updateHUD();
   markDirty();
-  console.log(`[VNP] Selected: ${PROBES[index].name} @ ${(PROBES[index].velocity * 100).toFixed(1)}% c`);
+  if (options.log) {
+    console.log(`[VNP] Selected: ${PROBES[sim.probeIndex].name} @ ${(PROBES[sim.probeIndex].velocity * 100).toFixed(1)}% c`);
+  }
+}
+
+function selectRandomProbe() {
+  if (PROBES.length < 2) {
+    selectProbe(0);
+    return;
+  }
+  let nextIndex = sim.probeIndex;
+  while (nextIndex === sim.probeIndex) {
+    nextIndex = Math.floor(Math.random() * PROBES.length);
+  }
+  selectProbe(nextIndex);
 }
 
 // ---------------------------------------------------------------------------
@@ -1707,7 +1717,7 @@ function setupUI() {
     opt.textContent = p.name;
     sel.appendChild(opt);
   });
-  sel.addEventListener('change', () => selectProbe(parseInt(sel.value)));
+  sel.addEventListener('change', () => selectProbe(parseInt(sel.value), { log: true }));
 
   // Play / pause
   const btnPlay = document.getElementById('btn-play');
@@ -1888,5 +1898,14 @@ window.vnpGalaxy = {
     renderPaused = false;
     onResize();
     markDirty();
+  },
+  selectProbe(index) {
+    selectProbe(index);
+  },
+  selectRandomProbe() {
+    selectRandomProbe();
+  },
+  getProbeCount() {
+    return PROBES.length;
   },
 };

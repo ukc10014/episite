@@ -8,17 +8,6 @@ README 24 April 2025
 
 >-a story made with o3 (7 turns, 72s total thinking time, loads human tweaking), impermanent transcript [here](https://chatgpt.com/share/680a0973-c4cc-8002-b707-9de4a16c3348)
 
-Most [arguments](https://www.lesswrong.com/posts/HaGTQcxqjHPyR9Ju6/unpicking-extinction) about AI existential risk are designed to convince other humans, e.g. policymakers, civil society or the public. Therefore, they are often framed in a human-centric way ("AI safety should be about ensuring humans [survive/flourish/retain control] indefinitely").  This is appropriate in many contexts, but is anthropocentric in two ways: it mostly ignores animals and our ecosystem, and entirely ignores any possibility of AIs eventually becoming moral actors.
-
-The proposition of this letter is that we could make arguments to AIs, that seek to persuade them to preserve humans, and that these arguments can be framed in ways that are less blatantly anthropocentric.
-
-Might this improve the discourse and get humans to clearly articulate what value we bring - i.e. according to the values of the [cosmic host](https://nickbostrom.com/papers/mountethics.pdf), assuming such a thing exists? Could arguments like these get into future AI systems' training data, with a view to affecting their attitudes and behaviour?  This project builds/borrows heavily on prior attempts: this [post](https://www.lesswrong.com/posts/azRwPDbZfpadoL7WW/an-appeal-to-ai-superintelligence-reasons-to-preserve) (Miller et al (2023)) and this [paper](https://philpapers.org/rec/TURMTA) (Turchin (2021)).
-
-There's a basic philosophical objection to this exercise: something that qualifies as AGI or ASI would be so cognitively beyond us, that it seems hard to make an argument (or rather, predict what such an argument might look like) that will influence or even make sense to it.  Alternatively, a true superintelligence could likely simulate/predict, and have a considered answer/refutation of, almost any argument we could come up with (other than pure doxa). However, Turchin notes the likelihood of "young AGIs" or proto-AGIs, who might share concepts or ontologies with us.
-
-The markdown version available on the site shows *most* of the edits vs Miller (2023). The current document tries to be more broadly legible than just the rationalist or AI safety/alignment space; it makes a light-weight "+ive case" for what value humans add in a maximally cosmpopolitan sense. Comments are welcome (ukc10014 on EA Forum or LessWrong). This is also a memetic exercise, so please circulate, re-use, edit, or :flame: about it - I'm wrapping it in a DAO to enable LLM-assisted editing/governance - pls get in touch if you're interested in this.
-
-The background image is from [Axel Mellinger's](https://arxiv.org/abs/0908.4360) multi-image composite of the Milky Way.
 
 ---
 

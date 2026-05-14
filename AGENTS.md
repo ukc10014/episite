@@ -36,6 +36,10 @@ This repository contains a browser-based installation app with two screens that 
 - Static mode uses the captured simulator frame at `app/static/starfield-frame.jpg`.
 - Uses Three.js from a CDN import map.
 - Renders a probe-eye view of transit through the Milky Way from processed astronomical data.
+- The renderer now defines a virtual swarm of 997 von Neumann probes, 997 being the nearest prime number to 1000.
+- Probe directions are deterministic rays from Sol, with higher density on and around the galactic plane and lighter coverage toward the galactic poles.
+- Only one probe view is rendered at a time. The app keeps one Three.js scene, one camera, and one shared star catalog in memory; the active probe is just a direction/velocity metadata switch.
+- Each time the starfield screen is re-entered from the prime cadence, the renderer randomly selects another probe from the swarm.
 - Loads `data/processed/stars.bin`, `metadata.json`, and `landmarks.json`.
 - Adds procedural Milky Way structure, dust, nebula-like clouds, relativistic visual toggles, minimaps, overlays, and debug controls.
 - The simulator starts playing automatically after load at 1:1 time: one viewer second equals one probe second. In the default hidden-controls view, only the corner Galactic-coordinate heading and distance-from-Sol readout should remain visible.

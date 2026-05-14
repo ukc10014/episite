@@ -493,7 +493,7 @@
     overflow: hidden;
     white-space: nowrap;
     color: #b8dcff;
-    font-size: 20px;
+    font-size: 100px;
     line-height: 1;
     text-shadow: 0 0 8px #000;
   }
@@ -822,7 +822,7 @@ import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
       updateProgress('Loading simulated starfield');
       const script = document.createElement('script');
       script.type = 'module';
-      script.src = 'renderer.js?v=starfield-realtime-1';
+      script.src = 'renderer.js?v=probe-swarm-1';
       script.addEventListener('error', () => {
         loadState.galaxy = true;
         galaxyScreen.classList.add('fake-starfield');
@@ -971,6 +971,7 @@ import { mountModelViewer } from './model-viewer.js?v=flag-palette-1';
 
     if (next === 'galaxy') {
       modelViewer.pause();
+      window.vnpGalaxy?.selectRandomProbe?.();
       window.vnpGalaxy?.resume();
     } else {
       window.vnpGalaxy?.pause();
